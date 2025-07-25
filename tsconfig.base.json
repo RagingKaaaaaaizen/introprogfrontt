@@ -8,6 +8,10 @@
     "declaration": false,
     "downlevelIteration": true,
     "experimentalDecorators": true,
+     "paths": {
+      "@app/*": ["src/app/*"],
+      "@environments/*": ["src/environments/*"]
+    },
     "moduleResolution": "node",
     "importHelpers": true,
     "target": "es2015",
@@ -16,9 +20,6 @@
       "es2018",
       "dom"
     ],
-    "paths": {
-      "@app/*": ["src/app/*"],
-      "@environments/*": ["src/environments/*"]
-    }
+   
   }
 }

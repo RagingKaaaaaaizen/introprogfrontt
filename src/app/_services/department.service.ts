@@ -20,7 +20,7 @@ export class DepartmentService{
     // private router: Router,
     private http: HttpClient,
   ){
-    this.departmentSubject = new BehaviorSubject<Department>(null)
+    this.departmentSubject = new BehaviorSubject<Department>(new Department());
     this.department = this.departmentSubject.asObservable()
   }
 

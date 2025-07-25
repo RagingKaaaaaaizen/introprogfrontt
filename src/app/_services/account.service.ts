@@ -81,10 +81,22 @@ export class AccountService {
         return this.http.post(`${baseUrl}/reset-password`, { token, password, confirmPassword });
     }
 
-    getAll() {
-        return this.http.get<Account[]>(baseUrl);
-    }
     
+    getAll() {
+  return this.http.get<Account[]>(baseUrl).pipe(
+    map((accounts: any[]) =>
+      accounts.map(acc => ({
+        ...acc,
+        isActive:
+          acc.isActive !== undefined
+            ? acc.isActive
+            : acc.active !== undefined
+              ? acc.active
+              : acc.status === 'active'
+      }))
+    )
+  );
+}
     getById(id: string) {
         return this.http.get<Account>(`${baseUrl}/${id}`)
     }

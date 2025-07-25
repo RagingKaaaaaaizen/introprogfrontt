@@ -10,11 +10,16 @@ export class ListComponent implements OnInit {
 
     constructor(private accountService: AccountService) {}
 
+
     ngOnInit() {
-        this.accountService.getAll()
-            .pipe(first())
-            .subscribe(accounts => this.accounts = accounts);
-    }
+    this.accountService.getAll()
+      .pipe(first())
+      .subscribe(accounts => {
+        console.log('Mapped Accounts:', accounts); // Debug: should show isActive correctly
+        this.accounts = accounts;
+      });
+  }
+
 
     deleteAccount(id: string) {
         const account = this.accounts.find(x => x.id === id);
