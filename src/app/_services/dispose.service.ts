@@ -2,27 +2,15 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '@environments/environment';
 import { Observable } from 'rxjs';
+import { Dispose } from '../_models';
 
 const baseUrl = `${environment.apiUrl}/api/dispose`;
-
-export interface Dispose {
-  id?: number;
-  itemId: number;
-  quantity: number;
-  disposalValue: number;
-  totalValue?: number; // Optional for creation
-  locationId: number;
-  reason?: string;
-  disposalDate: Date;
-  createdBy?: number; // Optional for creation
-  item?: { id: number; name: string; category?: { name: string }; brand?: { name: string } };
-  location?: { id: number; name: string };
-  user?: { id: number; firstName: string; lastName: string };
-}
 
 export interface DisposalValidation {
   valid: boolean;
   availableStock: number;
+  totalStock?: number;
+  usedInPCComponents?: number;
   message?: string;
 }
 

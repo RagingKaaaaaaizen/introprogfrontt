@@ -1,5 +1,4 @@
 ﻿import { Component } from '@angular/core';
-
 import { AccountService } from '@app/_services';
 import { Role } from '@app/_models';
 
@@ -142,6 +141,9 @@ import { Role } from '@app/_models';
       color: #333;
       transition: all 0.3s ease;
       text-align: center;
+      cursor: pointer;
+      position: relative;
+      z-index: 1;
     }
 
     .action-item:hover {

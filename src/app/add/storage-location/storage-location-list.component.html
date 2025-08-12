@@ -6,8 +6,8 @@
                 <div class="header-title">
                     <i class="fas fa-map-marker-alt"></i>
                     <div>
-                        <h1 class="page-title">Storage Locations</h1>
-                        <p class="page-subtitle">Manage inventory storage locations</p>
+                        <h1 class="page-title">All Locations</h1>
+                        <p class="page-subtitle">Manage storage and room locations</p>
                     </div>
                 </div>
                 <div class="header-actions">
@@ -66,7 +66,16 @@
                         >
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-3">
+                    <div class="filter-controls">
+                        <select class="form-select" [(ngModel)]="selectedType" (change)="onTypeChange()">
+                            <option value="">All Types</option>
+                            <option value="Storage Location">Storage Locations</option>
+                            <option value="Room Location">Room Locations</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
                     <div class="filter-controls">
                         <select class="form-select" [(ngModel)]="selectedSort" (change)="onSortChange()">
                             <option value="name">Sort by Name</option>
@@ -81,7 +90,7 @@
         <!-- Storage Locations Table -->
         <div class="card">
             <div class="card-header">
-                <h5><i class="fas fa-list"></i> Storage Locations</h5>
+                <h5><i class="fas fa-list"></i> All Locations</h5>
                 <div class="table-actions">
                     <button class="btn btn-sm btn-outline-secondary" (click)="refreshData()">
                         <i class="fas fa-sync-alt"></i>
@@ -105,6 +114,7 @@
                             <tr>
                                 <th><i class="fas fa-hashtag"></i> ID</th>
                                 <th><i class="fas fa-tag"></i> Name</th>
+                                <th><i class="fas fa-layer-group"></i> Type</th>
                                 <th><i class="fas fa-align-left"></i> Description</th>
                                 <th><i class="fas fa-box"></i> Items Count</th>
                                 <th><i class="fas fa-calendar"></i> Created</th>
@@ -121,6 +131,12 @@
                                         <i class="fas fa-map-marker-alt text-danger"></i>
                                         <strong>{{ loc.name }}</strong>
                                     </div>
+                                </td>
+                                <td>
+                                    <span class="location-type-badge" [class]="loc.typeColor">
+                                        <i [class]="loc.typeIcon"></i>
+                                        {{ loc.locationType }}
+                                    </span>
                                 </td>
                                 <td>
                                     <span class="description-text" [title]="loc.description || 'No description'">
@@ -155,7 +171,7 @@
                                 </td>
                             </tr>
                             <tr *ngIf="filteredLocations.length === 0">
-                                <td colspan="6" class="text-center py-4">
+                                <td colspan="7" class="text-center py-4">
                                     <div class="empty-state">
                                         <i class="fas fa-map-marker-alt"></i>
                                         <h4>No storage locations found</h4>

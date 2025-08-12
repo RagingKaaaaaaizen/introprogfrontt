@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { DisposeService, Dispose } from '../_services/dispose.service';
+import { DisposeService } from '../_services/dispose.service';
+import { Dispose } from '../_models';
 import { ItemService } from '../_services/item.service';
 import { StorageLocationService } from '../_services/storage-location.service';
 import { AlertService } from '../_services/alert.service';
@@ -32,13 +33,16 @@ export class DisposeComponent implements OnInit {
   ngOnInit(): void {
     this.initForm();
     this.loadData();
+    
+    // Listen for stock data changes from other components
+    window.addEventListener('stockDataChanged', this.handleStockDataChange.bind(this));
   }
 
   initForm() {
     this.form = this.formBuilder.group({
       itemId: ['', Validators.required],
       quantity: ['', [Validators.required, Validators.min(1)]],
-      disposalValue: ['', [Validators.required, Validators.min(0)]],
+      disposalValue: ['', [Validators.required, Validators.min(0.01)]],
       locationId: ['', Validators.required],
       reason: ['']
     });
@@ -99,6 +103,20 @@ export class DisposeComponent implements OnInit {
         if (result && result.valid !== undefined) {
           this.availableStock = result.availableStock || 0;
           console.log('Available stock set to:', this.availableStock);
+          
+          // Show detailed stock information
+          if (result.totalStock !== undefined && result.usedInPCComponents !== undefined) {
+            console.log('Stock breakdown:', {
+              totalStock: result.totalStock,
+              usedInPCComponents: result.usedInPCComponents,
+              availableStock: result.availableStock
+            });
+            
+            // Show alert with detailed information
+            if (result.usedInPCComponents > 0) {
+              this.alertService.info(`Stock Info: ${result.totalStock} total - ${result.usedInPCComponents} used in PC components = ${result.availableStock} available for disposal`);
+            }
+          }
           
           // Update quantity field with available stock if it's greater than 0
           if (this.availableStock > 0) {
@@ -172,6 +190,10 @@ export class DisposeComponent implements OnInit {
         console.log('Dispose successful:', result);
         this.loading = false;
         this.alertService.success('Items disposed successfully');
+        
+        // Notify stock list component to refresh its data
+        this.notifyStockListRefresh();
+        
         console.log('Navigating to dispose list...');
         this.router.navigate(['/dispose']); // Navigate to dispose list
       },
@@ -235,5 +257,38 @@ export class DisposeComponent implements OnInit {
     }).catch(error => {
       console.error('Navigation failed:', error);
     });
+  }
+
+  // Method to notify stock list component to refresh its data
+  private notifyStockListRefresh() {
+    // Dispatch a custom event that stock list component can listen to
+    const event = new CustomEvent('stockDataChanged', {
+      detail: {
+        timestamp: new Date().getTime(),
+        message: 'Items disposed - stock data updated'
+      }
+    });
+    window.dispatchEvent(event);
+    console.log('Stock data change event dispatched from dispose component');
+  }
+
+  // Handle stock data changes from other components
+  private handleStockDataChange(event: CustomEvent) {
+    console.log('Stock data change detected in dispose component:', event.detail);
+    
+    // Re-check available stock for the currently selected item
+    const currentItemId = this.form.get('itemId')?.value;
+    if (currentItemId) {
+      console.log('Re-checking available stock for item:', currentItemId);
+      this.checkAvailableStock(currentItemId);
+    }
+    
+    // Show a brief notification
+    this.alertService.info('Stock data updated - available quantities refreshed');
+  }
+
+  ngOnDestroy() {
+    // Clean up event listener
+    window.removeEventListener('stockDataChanged', this.handleStockDataChange.bind(this));
   }
 } 

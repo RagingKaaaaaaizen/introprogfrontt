@@ -8,4 +8,7 @@ export * from './item';
 export * from './stock';
 export * from './brand';
 export * from './storagelocation';
+export * from './room-location';
 export * from './pc';
+export * from './dispose';
+export * from './pc-component';

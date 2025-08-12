@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { PCRoutingModule } from './pc-routing.module';
 import { PCListComponent } from './pc-list.component';
 import { PCAddEditComponent } from './pc-add-edit.component';
+import { PCComponentsComponent } from './pc-components.component';
 
 @NgModule({
     imports: [
@@ -14,7 +15,8 @@ import { PCAddEditComponent } from './pc-add-edit.component';
     ],
     declarations: [
         PCListComponent,
-        PCAddEditComponent
+        PCAddEditComponent,
+        PCComponentsComponent
     ]
 })
 export class PCModule { } 

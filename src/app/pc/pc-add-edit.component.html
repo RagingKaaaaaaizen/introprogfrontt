@@ -3,121 +3,100 @@
         <div class="col-12">
             <h2>{{ isAddMode ? 'Add PC' : (isViewMode ? 'View PC' : 'Edit PC') }}</h2>
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                
+                <!-- PC Information -->
                 <div class="row">
-                    <div class="form-group col-md-6">
-                        <label>Name</label>
-                        <input type="text" formControlName="name" class="form-control" 
-                               [ngClass]="{ 'is-invalid': submitted && f.name.errors }" />
-                        <div *ngIf="submitted && f.name.errors" class="invalid-feedback">
-                            <div *ngIf="f.name.errors.required">Name is required</div>
-                        </div>
-                    </div>
-                    <div class="form-group col-md-6">
-                        <label>Serial Number</label>
-                        <input type="text" formControlName="serialNumber" class="form-control" />
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="form-group col-md-6">
-                        <label>Item</label>
-                        <select formControlName="itemId" class="form-control" 
-                                [ngClass]="{ 'is-invalid': submitted && f.itemId.errors }"
-                                (change)="onItemChange()">
-                            <option value="">Select Item</option>
-                            <option *ngFor="let item of items" [value]="item.id">
-                                {{ item.name }} ({{ item.category?.name }})
-                            </option>
-                        </select>
-                        <div *ngIf="submitted && f.itemId.errors" class="invalid-feedback">
-                            <div *ngIf="f.itemId.errors.required">Item is required</div>
-                        </div>
-                    </div>
-                    <div class="form-group col-md-6">
-                        <label>Room Location</label>
-                        <select formControlName="roomLocationId" class="form-control" 
-                                [ngClass]="{ 'is-invalid': submitted && f.roomLocationId.errors }">
-                            <option value="">Select Room Location</option>
-                            <option *ngFor="let location of roomLocations" [value]="location.id">
-                                {{ location.name }}
-                            </option>
-                        </select>
-                        <div *ngIf="submitted && f.roomLocationId.errors" class="invalid-feedback">
-                            <div *ngIf="f.roomLocationId.errors.required">Room Location is required</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="form-group col-md-6">
-                        <label>Status</label>
-                        <select formControlName="status" class="form-control" 
-                                [ngClass]="{ 'is-invalid': submitted && f.status.errors }">
-                            <option value="Active">Active</option>
-                            <option value="Inactive">Inactive</option>
-                            <option value="Maintenance">Maintenance</option>
-                            <option value="Retired">Retired</option>
-                        </select>
-                        <div *ngIf="submitted && f.status.errors" class="invalid-feedback">
-                            <div *ngIf="f.status.errors.required">Status is required</div>
-                        </div>
-                    </div>
-                    <div class="form-group col-md-6">
-                        <label>Assigned To</label>
-                        <input type="text" formControlName="assignedTo" class="form-control" />
-                    </div>
-                </div>
-
-                <!-- Dynamic Specification Fields -->
-                <div *ngIf="specificationFields.length > 0" class="row">
                     <div class="col-12">
-                        <h4>Specifications</h4>
-                        <div class="row">
-                            <div *ngFor="let field of specificationFields" class="form-group col-md-6">
-                                <label>{{ field.label }}</label>
-                                <input *ngIf="field.type === 'text'" 
-                                       type="text" 
-                                       [formControlName]="field.name" 
-                                       class="form-control" />
-                                <textarea *ngIf="field.type === 'textarea'" 
-                                          [formControlName]="field.name" 
-                                          class="form-control" 
-                                          rows="3"></textarea>
-                                <input *ngIf="field.type === 'number'" 
-                                       type="number" 
-                                       [formControlName]="field.name" 
-                                       class="form-control" />
-                                <select *ngIf="field.type === 'select'" 
-                                        [formControlName]="field.name" 
-                                        class="form-control">
-                                    <option value="">Select {{ field.label }}</option>
-                                    <option *ngFor="let option of field.options" [value]="option">
-                                        {{ option }}
-                                    </option>
-                                </select>
-                                <input *ngIf="field.type === 'date'" 
-                                       type="date" 
-                                       [formControlName]="field.name" 
-                                       class="form-control" />
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-desktop"></i> PC Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="form-group col-md-6">
+                                        <label>PC Name *</label>
+                                        <input type="text" formControlName="name" class="form-control" 
+                                               [ngClass]="{ 'is-invalid': submitted && f.name.errors }" />
+                                        <div *ngIf="submitted && f.name.errors" class="invalid-feedback">
+                                            <div *ngIf="f.name.errors.required">PC Name is required</div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label>Room Location *</label>
+                                        <select formControlName="roomLocationId" class="form-control" 
+                                                [ngClass]="{ 'is-invalid': submitted && f.roomLocationId.errors }">
+                                            <option value="">Select Room Location</option>
+                                            <option *ngFor="let location of roomLocations" [value]="location.id">
+                                                {{ location.name }}
+                                            </option>
+                                        </select>
+                                        <div *ngIf="submitted && f.roomLocationId.errors" class="invalid-feedback">
+                                            <div *ngIf="f.roomLocationId.errors.required">Room Location is required</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="form-group col-md-6">
+                                        <label>Serial Number</label>
+                                        <input type="text" formControlName="serialNumber" class="form-control" />
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label>Status</label>
+                                        <select formControlName="status" class="form-control" 
+                                                [ngClass]="{ 
+                                                    'is-invalid': submitted && f.status.errors,
+                                                    'border-success': f.status.value === 'Active',
+                                                    'border-warning': f.status.value === 'Maintenance',
+                                                    'border-secondary': f.status.value === 'Inactive',
+                                                    'border-danger': f.status.value === 'Retired'
+                                                }">
+                                            <option value="Active">🟢 Active</option>
+                                            <option value="Inactive">⚪ Inactive</option>
+                                            <option value="Maintenance">🟡 Maintenance</option>
+                                            <option value="Retired">🔴 Retired</option>
+                                        </select>
+                                        <div *ngIf="submitted && f.status.errors" class="invalid-feedback">
+                                            <div *ngIf="f.status.errors.required">Status is required</div>
+                                        </div>
+                                        <small class="form-text text-muted">
+                                            <i class="fas fa-info-circle"></i> 
+                                            Select the current operational status of this PC
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="form-group col-md-6">
+                                        <label>Assigned To</label>
+                                        <input type="text" formControlName="assignedTo" class="form-control" />
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Notes</label>
+                                    <textarea formControlName="notes" class="form-control" rows="3"></textarea>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Notes</label>
-                    <textarea formControlName="notes" class="form-control" rows="3"></textarea>
-                </div>
-
                 <div class="form-group" *ngIf="!isViewMode">
-                    <button [disabled]="loading" class="btn btn-primary">
+                    <button [disabled]="loading || !canSubmit()" class="btn btn-primary">
                         <span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>
                         {{ isAddMode ? 'Create PC' : 'Update PC' }}
                     </button>
                     <a routerLink="../" class="btn btn-link">Cancel</a>
+                    <button type="button" class="btn btn-info" (click)="goToStock()">
+                        <i class="fas fa-boxes"></i> View Stock
+                    </button>
                 </div>
                 <div class="form-group" *ngIf="isViewMode">
                     <a routerLink="../" class="btn btn-primary">Back to List</a>
+                    <button type="button" class="btn btn-info" (click)="goToStock()">
+                        <i class="fas fa-boxes"></i> View Stock
+                    </button>
                 </div>
             </form>
         </div>

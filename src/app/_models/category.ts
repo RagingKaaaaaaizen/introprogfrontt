@@ -1,6 +1,6 @@
 
 export interface Category {
-  id: number;
+  id?: number;
   name: string;
   description?: string;
   createdAt?: string;  // optional, if you want timestamps

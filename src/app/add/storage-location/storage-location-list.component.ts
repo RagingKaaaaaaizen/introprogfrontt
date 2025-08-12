@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { first } from 'rxjs/operators';
-import { StorageLocationService } from '../../_services/storage-location.service';
+import { StorageLocationService, RoomLocationService } from '../../_services';
 import { ItemService } from '../../_services/item.service';
 import { AlertService } from '../../_services/alert.service';
 import { Role } from '../../_models';
@@ -190,6 +190,29 @@ import { AccountService } from '../../_services/account.service';
       gap: 10px;
     }
 
+    .location-type-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: rgba(102, 126, 234, 0.1);
+    }
+
+    .location-type-badge.text-primary {
+      background: rgba(0, 123, 255, 0.1);
+    }
+
+    .location-type-badge.text-success {
+      background: rgba(40, 167, 69, 0.1);
+    }
+
+    .location-type-badge i {
+      font-size: 0.9rem;
+    }
+
     .description-text {
       max-width: 300px;
       overflow: hidden;
@@ -325,12 +348,14 @@ export class StorageLocationListComponent implements OnInit {
   loading = false;
   searchTerm = '';
   selectedSort = 'name';
+  selectedType = '';
   currentPage = 1;
   itemsPerPage = 10;
   Math = Math;
 
   constructor(
     private storageLocationService: StorageLocationService,
+    private roomLocationService: RoomLocationService,
     private itemService: ItemService,
     private alertService: AlertService,
     public accountService: AccountService,
@@ -348,16 +373,46 @@ export class StorageLocationListComponent implements OnInit {
 
   loadLocations() {
     this.loading = true;
+    
+    // Load storage locations
     this.storageLocationService.getAll()
       .pipe(first())
       .subscribe({
-        next: (locations) => {
-          this.locations = locations;
-          this.applyFilters();
-          this.loading = false;
+        next: (storageLocations) => {
+          // Add type information to storage locations
+          const storageWithType = storageLocations.map(loc => ({
+            ...loc,
+            locationType: 'Storage Location',
+            typeIcon: 'fas fa-box',
+            typeColor: 'text-primary'
+          }));
+
+          // Load room locations
+          this.roomLocationService.getAll()
+            .pipe(first())
+            .subscribe({
+              next: (roomLocations) => {
+                // Add type information to room locations
+                const roomWithType = roomLocations.map(loc => ({
+                  ...loc,
+                  locationType: 'Room Location',
+                  typeIcon: 'fas fa-door-open',
+                  typeColor: 'text-success'
+                }));
+
+                // Combine both types of locations
+                this.locations = [...storageWithType, ...roomWithType];
+                this.applyFilters();
+                this.loading = false;
+              },
+              error: (error) => {
+                this.alertService.error('Error loading room locations: ' + error);
+                this.loading = false;
+              }
+            });
         },
         error: (error) => {
-          this.alertService.error(error);
+          this.alertService.error('Error loading storage locations: ' + error);
           this.loading = false;
         }
       });
@@ -389,6 +444,11 @@ export class StorageLocationListComponent implements OnInit {
       });
     }
 
+    // Type filter
+    if (this.selectedType) {
+      filtered = filtered.filter(location => location.locationType === this.selectedType);
+    }
+
     // Sort filter
     switch (this.selectedSort) {
       case 'name':
@@ -411,6 +471,10 @@ export class StorageLocationListComponent implements OnInit {
   }
 
   onSortChange() {
+    this.applyFilters();
+  }
+
+  onTypeChange() {
     this.applyFilters();
   }
 

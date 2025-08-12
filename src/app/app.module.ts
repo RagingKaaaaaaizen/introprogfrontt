@@ -1,6 +1,6 @@
 ﻿import { NgModule, APP_INITIALIZER } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 
 // used to create fake backend
@@ -10,13 +10,14 @@ import { AppRoutingModule } from './app-routing.module';
 import { JwtInterceptor, ErrorInterceptor, appInitializer } from './_helpers';
 import { AccountService } from './_services';
 import { AppComponent } from './app.component';
-import { AlertComponent, NavComponent } from './_components';
+import { AlertComponent, NavComponent, ProfessionalTableComponent } from './_components';
 import { HomeComponent } from './home';
 
 @NgModule({
     imports: [
         BrowserModule,
         ReactiveFormsModule,
+        FormsModule,
         HttpClientModule,
         AppRoutingModule
     ],
@@ -24,6 +25,7 @@ import { HomeComponent } from './home';
         AppComponent,
         AlertComponent,
         NavComponent,
+        ProfessionalTableComponent,
         HomeComponent       
     ],
     providers: [

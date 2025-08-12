@@ -15,6 +15,9 @@
                         <i class="fas fa-trash-alt"></i>
                         View Disposals
                     </a>
+                    <a routerLink="/pc" class="btn btn-secondary">
+                        <i class="fas fa-desktop"></i> View PCs
+                    </a>
                     <a routerLink="/stocks/add" class="btn btn-primary">
                         <i class="fas fa-plus"></i>
                         Add Stock
@@ -50,8 +53,15 @@
                 <div class="stat-icon">
                     <i class="fas fa-dollar-sign"></i>
                 </div>
-                <div class="stat-number">${{ getTotalValue() | number:'1.0-0' }}</div>
+                <div class="stat-number">php{{ getTotalValue() | number:'1.0-0' }}</div>
                 <div class="stat-label">Total Value</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-desktop"></i>
+                </div>
+                <div class="stat-number">{{ getPCComponentsCount() }}</div>
+                <div class="stat-label">PC Components</div>
             </div>
         </div>
 
@@ -112,12 +122,13 @@
                                 <th><i class="fas fa-dollar-sign"></i> Price</th>
                                 <th><i class="fas fa-calculator"></i> Total</th>
                                 <th><i class="fas fa-info-circle"></i> Type</th>
+                                <th><i class="fas fa-desktop"></i> In Use</th>
                                 <th><i class="fas fa-cogs"></i> Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr *ngFor="let stock of filteredStocks" [attr.data-item-id]="stock.itemId" class="stock-row">
-                                <td>
+                            <tr *ngFor="let stock of paginatedStocks" [attr.data-item-id]="stock.itemId" class="stock-row">
+                                <td data-label="Item">
                                     <div class="item-info">
                                         <strong>{{ getItemName(stock.itemId) }}</strong>
                                         <small class="d-block text-muted" *ngIf="stock.disposeId">
@@ -125,40 +136,49 @@
                                         </small>
                                     </div>
                                 </td>
-                                <td>
+                                <td data-label="Category">
                                     <span class="category-badge">
                                         {{ getCategoryName(stock) }}
                                     </span>
                                 </td>
-                                <td>
+                                <td data-label="Brand">
                                     <span class="brand-badge">
                                         {{ getBrandName(stock) }}
                                     </span>
                                 </td>
-                                <td>
+                                <td data-label="Location">
                                     <span class="location-badge">
                                         {{ getLocationName(stock) }}
                                     </span>
                                 </td>
-                                <td>
-                                    <span class="quantity-badge" [ngClass]="{
-                                        'badge-success': !stock.disposeId,
-                                        'badge-danger': stock.disposeId
-                                    }">
-                                        {{ stock.quantity }}
-                                    </span>
+                                <td data-label="Quantity">
+                                    <div class="quantity-info">
+                                        <span class="quantity-badge" [ngClass]="{
+                                            'quantity-positive': !stock.disposeId && stock.quantity > 0,
+                                            'quantity-negative': stock.disposeId,
+                                            'quantity-zero': stock.quantity === 0
+                                        }">
+                                            {{ stock.quantity }}
+                                        </span>
+                                        <small class="d-block text-muted mt-1" *ngIf="!stock.disposeId">
+                                            <strong>Stock Summary:</strong><br>
+                                            Total: {{ getStockSummary(stock.itemId).total }} | 
+                                            Available: {{ getStockSummary(stock.itemId).available }} | 
+                                            In Use: {{ getStockSummary(stock.itemId).inUse }}
+                                        </small>
+                                    </div>
                                 </td>
-                                <td>
+                                <td data-label="Price">
                                     <span class="price-value">
-                                        ${{ stock.price | number:'1.2-2' }}
+                                        php{{ stock.price | number:'1.2-2' }}
                                     </span>
                                 </td>
-                                <td>
-                                    <span class="total-value">
-                                        ${{ (stock.price * stock.quantity) | number:'1.2-2' }}
+                                <td data-label="Total">
+                                    <span class="total-price">
+                                        php{{ (stock.price * stock.quantity) | number:'1.2-2' }}
                                     </span>
                                 </td>
-                                <td>
+                                <td data-label="Type">
                                     <span *ngIf="stock.disposeId" class="badge badge-danger">
                                         <i class="fas fa-trash-alt"></i> Disposal
                                     </span>
@@ -166,7 +186,20 @@
                                         <i class="fas fa-plus"></i> Addition
                                     </span>
                                 </td>
-                                <td>
+                                <td data-label="In Use">
+                                    <div class="in-use-info">
+                                        <span *ngIf="isItemInUse(stock.itemId)" class="badge badge-warning">
+                                            <i class="fas fa-desktop"></i> In Use
+                                        </span>
+                                        <span *ngIf="!isItemInUse(stock.itemId)" class="badge badge-secondary">
+                                            <i class="fas fa-box"></i> Available
+                                        </span>
+                                        <small class="d-block text-muted mt-1">
+                                            {{ getInUseDetails(stock.itemId) }}
+                                        </small>
+                                    </div>
+                                </td>
+                                <td data-label="Actions">
                                     <div class="action-buttons">
                                         <button type="button" class="btn btn-sm btn-outline-primary"
                                                 (click)="viewStock(stock.id)" title="View Details">
@@ -191,7 +224,7 @@
                                 </td>
                             </tr>
                             <tr *ngIf="filteredStocks.length === 0">
-                                <td colspan="9" class="text-center py-4">
+                                <td colspan="10" class="text-center py-4">
                                     <div class="empty-state">
                                         <i class="fas fa-box-open"></i>
                                         <h4>No stock entries found</h4>

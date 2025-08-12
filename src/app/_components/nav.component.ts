@@ -103,7 +103,7 @@ import { Role } from '@app/_models';
           </li>
 
           <!-- PC Management -->
-          <li class="nav-item" *ngIf="hasRole([Role.SuperAdmin, Role.Admin])">
+          <li class="nav-item" *ngIf="hasRole([Role.SuperAdmin, Role.Admin, Role.Viewer])">
             <a class="nav-link" 
                routerLink="/pc" 
                routerLinkActive="active"

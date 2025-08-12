@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { first } from 'rxjs/operators';
-import { StorageLocationService } from '../../_services/storage-location.service';
+import { StorageLocationService, RoomLocationService } from '../../_services';
 import { AlertService } from '../../_services/alert.service';
 
 @Component({
@@ -97,6 +97,19 @@ import { AlertService } from '../../_services/alert.service';
 
     .location-form {
       max-width: 100%;
+    }
+
+    .room-fields {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      border-left: 4px solid #667eea;
+    }
+
+    .room-fields .form-label {
+      font-weight: 600;
+      color: #333;
     }
 
     .form-group {
@@ -257,6 +270,7 @@ export class StorageLocationEditComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private storageLocationService: StorageLocationService,
+    private roomLocationService: RoomLocationService,
     private alertService: AlertService
   ) {}
 
@@ -267,7 +281,13 @@ export class StorageLocationEditComponent implements OnInit {
 
     this.form = this.formBuilder.group({
       name: ['', Validators.required],
-      description: ['']
+      locationType: ['', Validators.required],
+      description: [''],
+      building: [''],
+      floor: [''],
+      roomNumber: [''],
+      capacity: [null],
+      status: ['Active']
     });
 
     if (this.id) {
@@ -277,19 +297,38 @@ export class StorageLocationEditComponent implements OnInit {
 
   loadLocation() {
     this.loading = true;
+    
+    // Try to load as storage location first
     this.storageLocationService.getById(this.id)
       .pipe(first())
       .subscribe({
         next: (location) => {
+          // It's a storage location
           this.form.patchValue({
-            name: location.name,
-            description: location.description
+            ...location,
+            locationType: 'storage'
           });
           this.loading = false;
         },
-        error: (error) => {
-          this.alertService.error(error);
-          this.loading = false;
+        error: (storageError) => {
+          // Try to load as room location
+          this.roomLocationService.getById(this.id)
+            .pipe(first())
+            .subscribe({
+              next: (location) => {
+                // It's a room location
+                this.form.patchValue({
+                  ...location,
+                  locationType: 'room'
+                });
+                this.loading = false;
+              },
+              error: (roomError) => {
+                this.alertService.error('Location not found');
+                this.router.navigate(['/add/storage-location']);
+                this.loading = false;
+              }
+            });
         }
       });
   }
@@ -302,34 +341,81 @@ export class StorageLocationEditComponent implements OnInit {
     }
 
     this.loading = true;
-    const location = this.form.value;
+    const formData = this.form.value;
 
-    if (this.id) {
-      this.storageLocationService.update(this.id, location)
-        .pipe(first())
-        .subscribe({
-          next: () => {
-            this.alertService.success('Storage location updated successfully');
-            this.router.navigate(['/add/storage-location']);
-          },
-          error: (error) => {
-            this.alertService.error(error);
-            this.loading = false;
-          }
-        });
-    } else {
-      this.storageLocationService.create(location)
-        .pipe(first())
-        .subscribe({
-          next: () => {
-            this.alertService.success('Storage location created successfully');
-            this.router.navigate(['/add/storage-location']);
-          },
-          error: (error) => {
-            this.alertService.error(error);
-            this.loading = false;
-          }
-        });
+    if (formData.locationType === 'storage') {
+      // Save as storage location
+      const storageData = {
+        name: formData.name,
+        description: formData.description
+      };
+
+      if (this.id) {
+        this.storageLocationService.update(this.id, storageData)
+          .pipe(first())
+          .subscribe({
+            next: () => {
+              this.alertService.success('Storage location updated successfully');
+              this.router.navigate(['/add/storage-location']);
+            },
+            error: (error) => {
+              this.alertService.error(error);
+              this.loading = false;
+            }
+          });
+      } else {
+        this.storageLocationService.create(storageData)
+          .pipe(first())
+          .subscribe({
+            next: () => {
+              this.alertService.success('Storage location created successfully');
+              this.router.navigate(['/add/storage-location']);
+            },
+            error: (error) => {
+              this.alertService.error(error);
+              this.loading = false;
+            }
+          });
+      }
+    } else if (formData.locationType === 'room') {
+      // Save as room location
+      const roomData = {
+        name: formData.name,
+        description: formData.description,
+        building: formData.building,
+        floor: formData.floor,
+        roomNumber: formData.roomNumber,
+        capacity: formData.capacity,
+        status: formData.status
+      };
+
+      if (this.id) {
+        this.roomLocationService.update(this.id, roomData)
+          .pipe(first())
+          .subscribe({
+            next: () => {
+              this.alertService.success('Room location updated successfully');
+              this.router.navigate(['/add/storage-location']);
+            },
+            error: (error) => {
+              this.alertService.error(error);
+              this.loading = false;
+            }
+          });
+      } else {
+        this.roomLocationService.create(roomData)
+          .pipe(first())
+          .subscribe({
+            next: () => {
+              this.alertService.success('Room location created successfully');
+              this.router.navigate(['/add/storage-location']);
+            },
+            error: (error) => {
+              this.alertService.error(error);
+              this.loading = false;
+            }
+          });
+      }
     }
   }
 }

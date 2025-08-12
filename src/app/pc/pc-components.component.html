@@ -1,0 +1,448 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <!-- PC Header -->
+      <div class="pc-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h2 class="mb-1">
+              <i class="fas fa-desktop text-primary"></i> 
+              {{ pc?.name || 'PC Components' }}
+            </h2>
+            <p class="text-muted mb-0">
+              <i class="fas fa-barcode"></i> 
+              {{ pc?.serialNumber || 'No Serial' }} | 
+              <span class="badge" [ngClass]="{
+                'badge-success': pc?.status === 'Active',
+                'badge-warning': pc?.status === 'Maintenance',
+                'badge-secondary': pc?.status === 'Inactive',
+                'badge-danger': pc?.status === 'Retired'
+              }">{{ pc?.status || 'Unknown' }}</span>
+            </p>
+          </div>
+          <div>
+            <a routerLink="/pc" class="btn btn-outline-secondary me-2">
+              <i class="fas fa-arrow-left"></i> Back to PCs
+            </a>
+            <button type="button" class="btn btn-primary" (click)="addComponent()" *ngIf="hasRole([Role.SuperAdmin, Role.Admin])">
+              <i class="fas fa-plus"></i> Add Component
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PC Status Card -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <div class="status-indicator me-3" [ngClass]="{
+                  'status-working': getPCStatus().class === 'text-success',
+                  'status-warning': getPCStatus().class === 'text-warning',
+                  'status-danger': getPCStatus().class === 'text-danger',
+                  'status-info': getPCStatus().class === 'text-muted'
+                }">
+                  <i class="fas" [ngClass]="{
+                    'fa-check-circle': getPCStatus().class === 'text-success',
+                    'fa-exclamation-triangle': getPCStatus().class === 'text-warning',
+                    'fa-times-circle': getPCStatus().class === 'text-danger',
+                    'fa-info-circle': getPCStatus().class === 'text-muted'
+                  }"></i>
+                </div>
+                <div class="flex-grow-1">
+                  <h5 class="mb-1">PC Status: {{ getPCStatus().status }}</h5>
+                  <p class="mb-0 text-muted">
+                    <span *ngIf="getPCStatus().hasIssues" class="badge badge-danger me-2">
+                      <i class="fas fa-exclamation-triangle"></i> Issues Detected
+                    </span>
+                    <span *ngIf="!getPCStatus().hasIssues && components.length > 0" class="badge badge-success me-2">
+                      <i class="fas fa-check-circle"></i> All Components Working
+                    </span>
+                    {{ components.length }} components installed
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- System Info Card -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-info text-white">
+              <h6 class="mb-0">
+                <i class="fas fa-info-circle"></i> Stock-Based Component System
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <p class="mb-2">
+                    <strong>How it works:</strong> Only items with available stock quantities can be added as components.
+                  </p>
+                  <div class="row text-center">
+                    <div class="col-4">
+                      <div class="stat-box">
+                        <div class="stat-number text-primary">{{ availableItems.length }}</div>
+                        <div class="stat-label">Available Items</div>
+                      </div>
+                    </div>
+                    <div class="col-4">
+                      <div class="stat-box">
+                        <div class="stat-number text-success">{{ allStocks.length }}</div>
+                        <div class="stat-label">Total Stocks</div>
+                      </div>
+                    </div>
+                    <div class="col-4">
+                      <div class="stat-box">
+                        <div class="stat-number text-warning">{{ availableStocksCount }}</div>
+                        <div class="stat-label">Available Stocks</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="alert alert-warning mb-2">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Stock Deduction:</strong> Adding components will deduct from stock quantities, just like disposal.
+                  </div>
+                  <div class="alert alert-info mb-0">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Debug Info:</strong> 
+                    Stock data: {{ allStocks.length > 0 ? 'Loaded' : 'Not loaded' }} | 
+                    Items: {{ items.length > 0 ? 'Loaded' : 'Not loaded' }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Component Form -->
+      <div class="row mb-4" *ngIf="showAddForm">
+        <div class="col-12">
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-primary text-white">
+              <h5 class="mb-0">
+                <i class="fas fa-plus"></i> Add New Component
+              </h5>
+            </div>
+            <div class="card-body">
+              <form (ngSubmit)="saveComponent()" #componentForm="ngForm">
+                <div class="row">
+                  <!-- Item Selection -->
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">
+                      <i class="fas fa-tag text-primary"></i> Item *
+                    </label>
+                    <select 
+                      class="form-select" 
+                      [(ngModel)]="newComponent.itemId" 
+                      name="itemId" 
+                      required 
+                      [ngClass]="{ 'is-invalid': submitted && !newComponent.itemId }"
+                      (change)="onItemChange()"
+                    >
+                      <option value="">Select Item with Available Stock</option>
+                      <option *ngFor="let item of availableItems" [value]="item.id">
+                        {{ item.name }} - Available: {{ getAvailableQuantity(item.id) }} units
+                      </option>
+                    </select>
+                    <div class="invalid-feedback" *ngIf="submitted && !newComponent.itemId">
+                      Please select an item
+                    </div>
+                    
+                    <!-- Stock Status Display -->
+                    <div *ngIf="newComponent.itemId" class="mt-3">
+                      <div class="alert" [ngClass]="getStockAlertClass(newComponent.itemId)">
+                        <div class="d-flex align-items-center">
+                          <i class="fas fa-database me-2"></i>
+                          <div>
+                            <strong>Stock Status:</strong> {{ getStockGuidance(newComponent.itemId) }}
+                            <br>
+                            <small>Available Quantity: {{ getAvailableQuantity(newComponent.itemId) }} units</small>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <!-- Debug Information -->
+                      <div class="mt-2 p-3 bg-light border rounded">
+                        <small class="text-muted">
+                          <strong>Debug Info:</strong><br>
+                          Stock entries: {{ getStockDebugInfo(newComponent.itemId).matchingStocks }} | 
+                          Available stocks: {{ getStockDebugInfo(newComponent.itemId).availableStocks }} | 
+                          Total stocks loaded: {{ getStockDebugInfo(newComponent.itemId).totalStocks }}
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Quantity -->
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">
+                      <i class="fas fa-sort-numeric-up text-primary"></i> Quantity *
+                    </label>
+                    <input 
+                      type="number" 
+                      class="form-control" 
+                      [(ngModel)]="newComponent.quantity" 
+                      name="quantity" 
+                      required 
+                      min="1" 
+                      [max]="getAvailableQuantity(newComponent.itemId)"
+                      (blur)="onQuantityChange()"
+                      [ngClass]="{ 'is-invalid': submitted && (!newComponent.quantity || newComponent.quantity <= 0) }"
+                      placeholder="Enter quantity"
+                    >
+                    <div class="invalid-feedback" *ngIf="submitted && (!newComponent.quantity || newComponent.quantity <= 0)">
+                      Quantity must be greater than 0
+                    </div>
+                    <small class="form-text text-muted">
+                      <i class="fas fa-info-circle"></i>
+                      Cannot exceed available stock quantity (Max: {{ getAvailableQuantity(newComponent.itemId) }})
+                    </small>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <!-- Price -->
+                  <div class="col-md-4 mb-3">
+                    <label class="form-label fw-bold">
+                      <i class="fas fa-dollar-sign text-primary"></i> Price (per unit) *
+                    </label>
+                    <input 
+                      type="number" 
+                      class="form-control" 
+                      [(ngModel)]="newComponent.price" 
+                      name="price" 
+                      required 
+                      step="0.01"
+                      [ngClass]="{ 
+                        'is-invalid': submitted && (!newComponent.price || newComponent.price <= 0),
+                        'border-success': newComponent.price && newComponent.stockId,
+                        'border-warning': !newComponent.price
+                      }"
+                      placeholder="Enter price"
+                    >
+                    <div class="invalid-feedback" *ngIf="submitted && (!newComponent.price || newComponent.price <= 0)">
+                      Price must be greater than 0
+                    </div>
+                    <small class="form-text" [ngClass]="{'text-success': newComponent.price && newComponent.stockId, 'text-muted': !newComponent.price}">
+                      <i class="fas fa-check-circle" *ngIf="newComponent.price && newComponent.stockId"></i>
+                      <i class="fas fa-info-circle" *ngIf="!newComponent.price"></i>
+                      {{ newComponent.price && newComponent.stockId ? getPriceSourceInfo() : 'Price will be auto-filled when item is selected' }}
+                    </small>
+                  </div>
+
+                  <!-- Status -->
+                  <div class="col-md-4 mb-3">
+                    <label class="form-label fw-bold">
+                      <i class="fas fa-cogs text-primary"></i> Status *
+                    </label>
+                    <select 
+                      class="form-select" 
+                      [(ngModel)]="newComponent.status" 
+                      name="status" 
+                      required
+                    >
+                      <option value="Working">Working</option>
+                      <option value="Missing">Missing</option>
+                      <option value="Not Working">Not Working</option>
+                      <option value="Maintenance">Maintenance</option>
+                    </select>
+                    <small class="form-text text-muted">
+                      Select the current status of this component
+                    </small>
+                  </div>
+
+                  <!-- Total Price (Read-only) -->
+                  <div class="col-md-4 mb-3">
+                    <label class="form-label fw-bold">
+                      <i class="fas fa-calculator text-primary"></i> Total Price
+                    </label>
+                    <input 
+                      type="number" 
+                      class="form-control" 
+                      [value]="newComponent.totalPrice || ''" 
+                      readonly
+                      [disabled]="true"
+                      placeholder="Auto-calculated"
+                    >
+                    <small class="form-text text-muted">
+                      Automatically calculated (Price × Quantity)
+                    </small>
+                  </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="d-flex justify-content-end gap-2">
+                  <button type="button" class="btn btn-outline-secondary" (click)="cancelAdd()">
+                    <i class="fas fa-times"></i> Cancel
+                  </button>
+                  <button type="submit" class="btn btn-primary" [disabled]="componentForm.invalid || loading">
+                    <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+                    <i *ngIf="!loading" class="fas fa-save me-2"></i>
+                    {{ loading ? 'Adding...' : 'Add Component' }}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Components Table -->
+      <div class="row">
+        <div class="col-12">
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">
+                <i class="fas fa-microchip"></i> Current Components
+              </h5>
+              <div>
+                <button class="btn btn-sm btn-outline-light" (click)="refreshData()">
+                  <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+              </div>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                  <thead class="table-dark">
+                    <tr>
+                      <th><i class="fas fa-box"></i> Item</th>
+                      <th><i class="fas fa-sort-numeric-up"></i> Quantity</th>
+                      <th><i class="fas fa-dollar-sign"></i> Price</th>
+                      <th><i class="fas fa-calculator"></i> Total</th>
+                      <th><i class="fas fa-cogs"></i> Status</th>
+                      <th><i class="fas fa-tools"></i> Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let component of components" [ngClass]="getComponentRowClass(component)">
+                      <td>
+                        <div class="d-flex align-items-center">
+                          <div class="component-icon me-2">
+                            <i class="fas fa-microchip text-primary"></i>
+                          </div>
+                          <div>
+                            <strong>{{ getItemNameFromComponent(component) }}</strong>
+                            <br>
+                            <small class="text-muted" *ngIf="component.remarks">
+                              {{ component.remarks }}
+                            </small>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="badge bg-primary">{{ component.quantity }}</span>
+                      </td>
+                      <td>
+                        <span class="text-success fw-bold">php{{ component.price | number:'1.2-2' }}</span>
+                      </td>
+                      <td>
+                        <span class="text-info fw-bold">php{{ component.totalPrice | number:'1.2-2' }}</span>
+                      </td>
+                      <td>
+                        <select [(ngModel)]="component.status" 
+                                (change)="updateComponentStatus(component)"
+                                class="form-select form-select-sm"
+                                [ngClass]="getStatusClass(component.status)">
+                          <option value="Working">Working</option>
+                          <option value="Missing">Missing</option>
+                          <option value="Not Working">Not Working</option>
+                          <option value="Maintenance">Maintenance</option>
+                        </select>
+                      </td>
+                      <td>
+                        <div class="btn-group" role="group" *ngIf="hasRole([Role.SuperAdmin, Role.Admin])">
+                          <button type="button" class="btn btn-sm btn-outline-warning" 
+                                  (click)="returnToStock(component.id)" 
+                                  title="Return to Stock">
+                            <i class="fas fa-undo"></i>
+                          </button>
+                          <button type="button" class="btn btn-sm btn-outline-danger" 
+                                  (click)="removeComponent(component.id)" 
+                                  title="Remove Component">
+                            <i class="fas fa-trash"></i>
+                          </button>
+                        </div>
+                        <span class="text-muted" *ngIf="!hasRole([Role.SuperAdmin, Role.Admin])">
+                          <i class="fas fa-eye"></i> View Only
+                        </span>
+                      </td>
+                    </tr>
+                    <tr *ngIf="components.length === 0">
+                      <td colspan="6" class="text-center py-5">
+                        <div class="empty-state">
+                          <i class="fas fa-microchip fa-3x text-muted mb-3"></i>
+                          <h5 class="text-muted">No components found</h5>
+                          <p class="text-muted">This PC doesn't have any components yet.</p>
+                          <button type="button" class="btn btn-primary" (click)="addComponent()">
+                            <i class="fas fa-plus"></i> Add First Component
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="row mt-4">
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm stat-card">
+            <div class="card-body text-center">
+              <div class="stat-icon bg-primary text-white">
+                <i class="fas fa-microchip"></i>
+              </div>
+              <div class="stat-number text-primary">{{ components.length }}</div>
+              <div class="stat-label">Total Components</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm stat-card">
+            <div class="card-body text-center">
+              <div class="stat-icon bg-success text-white">
+                <i class="fas fa-dollar-sign"></i>
+              </div>
+              <div class="stat-number text-success">php{{ getTotalValue() | number:'1.0-0' }}</div>
+              <div class="stat-label">Total Value</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm stat-card">
+            <div class="card-body text-center">
+              <div class="stat-icon bg-info text-white">
+                <i class="fas fa-tags"></i>
+              </div>
+              <div class="stat-number text-info">{{ getUniqueCategories() }}</div>
+              <div class="stat-label">Categories</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm stat-card">
+            <div class="card-body text-center">
+              <div class="stat-icon bg-warning text-white">
+                <i class="fas fa-sort-numeric-up"></i>
+              </div>
+              <div class="stat-number text-warning">{{ getTotalQuantity() }}</div>
+              <div class="stat-label">Total Items</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 

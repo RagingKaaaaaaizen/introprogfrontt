@@ -1,10 +1,8 @@
 export interface PC {
-    id: number;
+  id?: number;
     name: string;
     serialNumber?: string;
-    itemId: number;
     roomLocationId: number;
-    specifications?: string;
     status: 'Active' | 'Inactive' | 'Maintenance' | 'Retired';
     assignedTo?: string;
     notes?: string;
@@ -12,27 +10,14 @@ export interface PC {
     createdAt: string;
     updatedAt: string;
     isDeleting?: boolean;
-    item?: {
-        id: number;
-        name: string;
-        description?: string;
-        category?: {
-            id: number;
-            name: string;
-        };
-        brand?: {
-            id: number;
-            name: string;
-        };
-    };
     roomLocation?: {
-        id: number;
+        id?: number;
         name: string;
     };
 }
 
 export interface SpecificationField {
-    id: number;
+    id?: number;
     categoryId: number;
     fieldName: string;
     fieldLabel: string;
@@ -41,7 +26,7 @@ export interface SpecificationField {
     fieldOrder: number;
     options?: string;
     category?: {
-        id: number;
+        id?: number;
         name: string;
     };
 } 

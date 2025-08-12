@@ -2,8 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { first } from 'rxjs/operators';
-import { PCService, ItemService, StorageLocationService, AlertService } from '../_services';
-import { PC, SpecificationField } from '../_models/pc';
+import { PCService, RoomLocationService, AlertService } from '@app/_services';
+import { PC } from '../_models/pc';
 
 @Component({ templateUrl: 'pc-add-edit.component.html' })
 export class PCAddEditComponent implements OnInit {
@@ -13,18 +13,14 @@ export class PCAddEditComponent implements OnInit {
     isViewMode: boolean;
     loading = false;
     submitted = false;
-    items: any[] = [];
     roomLocations: any[] = [];
-    specificationFields: SpecificationField[] = [];
-    selectedItem: any = null;
 
     constructor(
         private formBuilder: FormBuilder,
         private route: ActivatedRoute,
         private router: Router,
         private pcService: PCService,
-        private itemService: ItemService,
-        private storageLocationService: StorageLocationService,
+        private roomLocationService: RoomLocationService,
         private alertService: AlertService
     ) { }
 
@@ -36,15 +32,12 @@ export class PCAddEditComponent implements OnInit {
         this.form = this.formBuilder.group({
             name: ['', Validators.required],
             serialNumber: [''],
-            itemId: ['', Validators.required],
             roomLocationId: ['', Validators.required],
-            specifications: [''],
             status: ['Active', Validators.required],
             assignedTo: [''],
             notes: ['']
         });
 
-        this.loadItems();
         this.loadRoomLocations();
 
         if (!this.isAddMode) {
@@ -57,16 +50,8 @@ export class PCAddEditComponent implements OnInit {
         }
     }
 
-    loadItems() {
-        this.itemService.getAll()
-            .pipe(first())
-            .subscribe(items => {
-                this.items = items;
-            });
-    }
-
     loadRoomLocations() {
-        this.storageLocationService.getAll()
+        this.roomLocationService.getAll()
             .pipe(first())
             .subscribe(locations => {
                 this.roomLocations = locations;
@@ -78,71 +63,61 @@ export class PCAddEditComponent implements OnInit {
             .pipe(first())
             .subscribe(pc => {
                 this.form.patchValue(pc);
-                this.selectedItem = this.items.find(item => item.id === pc.itemId);
-                if (this.selectedItem) {
-                    this.loadSpecificationFields(this.selectedItem.categoryId);
-                }
-            });
-    }
-
-    onItemChange() {
-        const itemId = this.form.get('itemId').value;
-        this.selectedItem = this.items.find(item => item.id === itemId);
-        if (this.selectedItem) {
-            this.loadSpecificationFields(this.selectedItem.categoryId);
-        }
-    }
-
-    loadSpecificationFields(categoryId: number) {
-        this.pcService.getSpecificationFields(categoryId)
-            .pipe(first())
-            .subscribe(fields => {
-                this.specificationFields = fields;
-                // Add form controls for specification fields
-                fields.forEach(field => {
-                    if (!this.form.contains(field.fieldName)) {
-                        this.form.addControl(field.fieldName, this.formBuilder.control(''));
-                    }
-                });
             });
     }
 
     get f() { return this.form.controls; }
 
+    canSubmit(): boolean {
+        return this.form.valid;
+    }
+
+    goToStock() {
+        this.router.navigate(['/stocks']);
+    }
+
     onSubmit() {
         this.submitted = true;
+        console.log('PC Add Form Submitted:', this.form.value);
+        console.log('Form Valid:', this.form.valid);
+        console.log('Can Submit:', this.canSubmit());
 
-        if (this.form.invalid) {
+        if (!this.canSubmit()) {
+            console.log('Form validation failed');
             return;
         }
 
         this.loading = true;
-        const pc = this.form.value;
+        const pcData = this.form.value;
+        console.log('PC Data to send:', pcData);
 
         if (this.isAddMode) {
-            this.createPC(pc);
+            this.createPC(pcData);
         } else {
-            this.updatePC(pc);
+            this.updatePC(pcData);
         }
     }
 
-    private createPC(pc: PC) {
-        this.pcService.create(pc)
+    private createPC(pcData: any) {
+        console.log('Creating PC with data:', pcData);
+        this.pcService.create(pcData)
             .pipe(first())
             .subscribe({
-                next: () => {
+                next: (pc) => {
+                    console.log('PC created successfully:', pc);
                     this.alertService.success('PC created successfully', { keepAfterRouteChange: true });
                     this.router.navigate(['../'], { relativeTo: this.route });
                 },
                 error: error => {
+                    console.error('Error creating PC:', error);
                     this.alertService.error(error);
                     this.loading = false;
                 }
             });
     }
 
-    private updatePC(pc: PC) {
-        this.pcService.update(this.id, pc)
+    private updatePC(pcData: any) {
+        this.pcService.update(this.id, pcData)
             .pipe(first())
             .subscribe({
                 next: () => {

@@ -9,3 +9,6 @@ export * from './stock.service';
 export * from './brand.service';
 export * from './storage-location.service';
 export * from './pc.service';
+export * from './pc-component.service';
+export * from './room-location.service';
+export * from './dispose.service';

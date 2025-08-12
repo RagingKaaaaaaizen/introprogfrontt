@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { first } from 'rxjs/operators';
-import { StorageLocationService } from '../../_services/storage-location.service';
+import { StorageLocationService, RoomLocationService } from '../../_services';
 import { AlertService } from '../../_services/alert.service';
 
 @Component({
@@ -96,6 +96,19 @@ import { AlertService } from '../../_services/alert.service';
 
     .location-form {
       max-width: 100%;
+    }
+
+    .room-fields {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      border-left: 4px solid #667eea;
+    }
+
+    .room-fields .form-label {
+      font-weight: 600;
+      color: #333;
     }
 
     .form-group {
@@ -238,35 +251,89 @@ import { AlertService } from '../../_services/alert.service';
   `]
 })
 export class StorageLocationAddComponent {
-  model: any = {};
+  model: any = {
+    locationType: '',
+    status: 'Active'
+  };
   loading = false;
   submitted = false;
 
   constructor(
     private storageLocationService: StorageLocationService,
+    private roomLocationService: RoomLocationService,
     private alertService: AlertService,
     private router: Router
   ) {}
+
+  onLocationTypeChange() {
+    // Reset room-specific fields when switching to storage type
+    if (this.model.locationType === 'storage') {
+      this.model.building = '';
+      this.model.floor = '';
+      this.model.roomNumber = '';
+      this.model.capacity = null;
+      this.model.status = 'Active';
+    }
+  }
 
   saveLocation() {
     this.submitted = true;
 
     if (!this.model.name) {
+      this.alertService.error('Location name is required');
+      return;
+    }
+
+    if (!this.model.locationType) {
+      this.alertService.error('Location type is required');
       return;
     }
 
     this.loading = true;
-    this.storageLocationService.create(this.model)
-      .pipe(first())
-      .subscribe({
-        next: () => {
-          this.alertService.success('Storage location created successfully');
-          this.router.navigate(['/add/storage-location']);
-        },
-        error: (error) => {
-          this.alertService.error(error);
-          this.loading = false;
-        }
-      });
+
+    if (this.model.locationType === 'storage') {
+      // Save as storage location
+      const storageData: any = {
+        name: this.model.name,
+        description: this.model.description
+      };
+
+      this.storageLocationService.create(storageData)
+        .pipe(first())
+        .subscribe({
+          next: () => {
+            this.alertService.success('Storage location created successfully', { keepAfterRouteChange: true });
+            this.router.navigate(['/add/storage-location']);
+          },
+          error: error => {
+            this.alertService.error(error);
+            this.loading = false;
+          }
+        });
+    } else if (this.model.locationType === 'room') {
+      // Save as room location
+      const roomData: any = {
+        name: this.model.name,
+        description: this.model.description,
+        building: this.model.building,
+        floor: this.model.floor,
+        roomNumber: this.model.roomNumber,
+        capacity: this.model.capacity,
+        status: this.model.status
+      };
+
+      this.roomLocationService.create(roomData)
+        .pipe(first())
+        .subscribe({
+          next: () => {
+            this.alertService.success('Room location created successfully', { keepAfterRouteChange: true });
+            this.router.navigate(['/add/storage-location']);
+          },
+          error: error => {
+            this.alertService.error(error);
+            this.loading = false;
+          }
+        });
+    }
   }
 }

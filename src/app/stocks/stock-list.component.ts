@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { first } from 'rxjs/operators';
 
-import { AccountService, AlertService, StockService, ItemService, CategoryService, BrandService, StorageLocationService } from '@app/_services';
+import { AccountService, AlertService, StockService, ItemService, CategoryService, BrandService, StorageLocationService, PCService, PCComponentService } from '@app/_services';
 import { Role } from '@app/_models';
 
 @Component({
@@ -11,14 +11,17 @@ import { Role } from '@app/_models';
   styles: [`
     .list-container {
       padding: 20px 0;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
     }
 
     .page-header {
       background: white;
-      border-radius: 12px;
+      border-radius: 16px;
       padding: 30px;
       margin-bottom: 30px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
     }
 
     .header-content {
@@ -62,29 +65,55 @@ import { Role } from '@app/_models';
       flex-wrap: wrap;
     }
 
+    .header-actions .btn {
+      border-radius: 25px;
+      padding: 12px 24px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .header-actions .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 20px;
       margin-bottom: 30px;
     }
 
     .stat-card {
       background: white;
-      border-radius: 12px;
+      border-radius: 16px;
       padding: 25px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
       transition: all 0.3s ease;
       text-align: center;
+      border: 1px solid rgba(255,255,255,0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
 
     .stat-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+      transform: translateY(-8px);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.15);
     }
 
     .stat-icon {
-      font-size: 3rem;
+      font-size: 2.5rem;
       margin-bottom: 15px;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       -webkit-background-clip: text;
@@ -93,7 +122,7 @@ import { Role } from '@app/_models';
     }
 
     .stat-number {
-      font-size: 2.5rem;
+      font-size: 2.2rem;
       font-weight: bold;
       color: #333;
       margin-bottom: 5px;
@@ -101,15 +130,26 @@ import { Role } from '@app/_models';
 
     .stat-label {
       color: #666;
-      font-size: 1rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .quantity-info, .in-use-info {
+      min-width: 120px;
+    }
+
+    .quantity-info small, .in-use-info small {
+      font-size: 0.75rem;
+      line-height: 1.2;
     }
 
     .filters-section {
       background: white;
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      border-radius: 16px;
+      padding: 25px;
+      margin-bottom: 25px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
     }
 
     .search-box {
@@ -121,37 +161,57 @@ import { Role } from '@app/_models';
       left: 15px;
       top: 50%;
       transform: translateY(-50%);
-      color: #666;
+      color: #667eea;
       z-index: 1;
     }
 
     .search-box .form-control {
       padding-left: 45px;
+      border-radius: 25px;
+      border: 2px solid #e9ecef;
+      transition: all 0.3s ease;
+    }
+
+    .search-box .form-control:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
     }
 
     .filter-controls {
       display: flex;
-      gap: 10px;
+      gap: 15px;
+    }
+
+    .filter-controls .form-select {
+      border-radius: 25px;
+      border: 2px solid #e9ecef;
+      transition: all 0.3s ease;
+    }
+
+    .filter-controls .form-select:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
     }
 
     .card {
       border: none;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      margin-bottom: 25px;
       transition: all 0.3s ease;
+      overflow: hidden;
     }
 
     .card:hover {
-      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-      transform: translateY(-2px);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.15);
+      transform: translateY(-4px);
     }
 
     .card-header {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
-      border-radius: 12px 12px 0 0 !important;
-      padding: 20px;
+      border-radius: 16px 16px 0 0 !important;
+      padding: 25px;
       font-weight: 600;
       display: flex;
       justify-content: space-between;
@@ -163,13 +223,39 @@ import { Role } from '@app/_models';
       gap: 10px;
     }
 
-    .stock-row {
+    .table-actions .btn {
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-weight: 500;
+    }
+
+    .table {
+      margin-bottom: 0;
+    }
+
+    .table thead th {
+      background: #f8f9fa;
+      border: none;
+      padding: 15px;
+      font-weight: 600;
+      color: #495057;
+      border-bottom: 2px solid #dee2e6;
+    }
+
+    .table tbody td {
+      padding: 15px;
+      vertical-align: middle;
+      border: none;
+      border-bottom: 1px solid #f1f3f4;
+    }
+
+    .table tbody tr {
       transition: all 0.3s ease;
     }
 
-    .stock-row:hover {
+    .table tbody tr:hover {
       background-color: #f8f9fa;
-      transform: scale(1.01);
+      transform: scale(1.005);
     }
 
     .item-info {
@@ -177,23 +263,67 @@ import { Role } from '@app/_models';
       flex-direction: column;
     }
 
-    .category-badge,
-    .brand-badge,
-    .location-badge {
+    .item-info strong {
+      color: #333;
+      font-weight: 600;
+    }
+
+    .category-badge {
       display: inline-block;
-      padding: 4px 8px;
-      border-radius: 12px;
+      padding: 6px 12px;
+      border-radius: 20px;
       font-size: 0.8rem;
       font-weight: 500;
       background: rgba(102, 126, 234, 0.1);
       color: #667eea;
+      border: 1px solid rgba(102, 126, 234, 0.2);
+    }
+
+    .brand-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      background: rgba(255, 193, 7, 0.1);
+      color: #ffc107;
+      border: 1px solid rgba(255, 193, 7, 0.2);
+    }
+
+    .location-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      background: rgba(40, 167, 69, 0.1);
+      color: #28a745;
+      border: 1px solid rgba(40, 167, 69, 0.2);
     }
 
     .quantity-badge {
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 0.9rem;
+      padding: 8px 16px;
+      border-radius: 25px;
+      font-size: 0.85rem;
       font-weight: 600;
+      display: inline-block;
+      text-align: center;
+      min-width: 80px;
+    }
+
+    .quantity-positive {
+      background: linear-gradient(135deg, #28a745, #20c997);
+      color: white;
+    }
+
+    .quantity-negative {
+      background: linear-gradient(135deg, #dc3545, #e83e8c);
+      color: white;
+    }
+
+    .quantity-zero {
+      background: linear-gradient(135deg, #6c757d, #495057);
+      color: white;
     }
 
     .price-value,
@@ -202,49 +332,72 @@ import { Role } from '@app/_models';
       color: #333;
     }
 
+    .total-price {
+      font-weight: 600;
+      color: #28a745;
+    }
+
+    .created-date {
+      font-size: 0.85rem;
+      color: #6c757d;
+      font-weight: 500;
+    }
+
     .action-buttons {
       display: flex;
-      gap: 5px;
+      gap: 8px;
       flex-wrap: wrap;
+      justify-content: center;
     }
 
     .action-buttons .btn {
-      padding: 6px 10px;
+      padding: 8px 12px;
       font-size: 0.8rem;
+      border-radius: 20px;
+      transition: all 0.3s ease;
+      min-width: 40px;
+    }
+
+    .action-buttons .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
 
     .empty-state {
       text-align: center;
-      padding: 40px;
-      color: #666;
+      padding: 60px 20px;
+      color: #6c757d;
     }
 
     .empty-state i {
       font-size: 4rem;
-      color: #ddd;
+      color: #dee2e6;
       margin-bottom: 20px;
     }
 
     .empty-state h4 {
-      color: #333;
+      color: #495057;
       margin-bottom: 10px;
+      font-weight: 600;
     }
 
     .pagination-section {
       background: white;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      border-radius: 16px;
+      padding: 25px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
       gap: 20px;
+      border: 1px solid rgba(255,255,255,0.2);
     }
 
     .pagination-info {
-      color: #666;
+      color: #6c757d;
       font-size: 0.9rem;
+      font-weight: 500;
     }
 
     .pagination {
@@ -254,50 +407,178 @@ import { Role } from '@app/_models';
     .page-link {
       color: #667eea;
       border: none;
-      padding: 8px 12px;
-      margin: 0 2px;
-      border-radius: 6px;
+      padding: 10px 16px;
+      margin: 0 3px;
+      border-radius: 20px;
       cursor: pointer;
       transition: all 0.3s ease;
+      font-weight: 500;
     }
 
     .page-link:hover {
       background: rgba(102, 126, 234, 0.1);
       color: #667eea;
+      transform: translateY(-2px);
     }
 
     .page-item.active .page-link {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
     }
 
     .page-item.disabled .page-link {
-      color: #ccc;
+      color: #adb5bd;
       cursor: not-allowed;
     }
 
-    /* Responsive */
+    /* Mobile Responsive */
     @media (max-width: 768px) {
+      .list-container {
+        padding: 10px 0;
+      }
+
+      .page-header {
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+
       .header-content {
         flex-direction: column;
         align-items: stretch;
+        text-align: center;
+      }
+
+      .header-title {
+        justify-content: center;
+        margin-bottom: 20px;
+      }
+
+      .page-title {
+        font-size: 2rem;
       }
 
       .header-actions {
         justify-content: center;
+        flex-direction: column;
+      }
+
+      .header-actions .btn {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+      }
+
+      .stat-card {
+        padding: 20px;
+      }
+
+      .stat-icon {
+        font-size: 2rem;
+      }
+
+      .stat-number {
+        font-size: 1.8rem;
+      }
+
+      .filters-section {
+        padding: 20px;
       }
 
       .filter-controls {
         flex-direction: column;
+        gap: 10px;
+      }
+
+      .card-header {
+        padding: 20px;
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+      }
+
+      .table-responsive {
+        border-radius: 0;
+      }
+
+      .table thead {
+        display: none;
+      }
+
+      .table tbody tr {
+        display: block;
+        margin-bottom: 20px;
+        border: 1px solid #dee2e6;
+        border-radius: 12px;
+        padding: 15px;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      }
+
+      .table tbody td {
+        display: block;
+        text-align: left;
+        padding: 8px 0;
+        border: none;
+      }
+
+      .table tbody td::before {
+        content: attr(data-label) ": ";
+        font-weight: 600;
+        color: #495057;
+        margin-right: 10px;
+      }
+
+      .action-buttons {
+        justify-content: center;
+        margin-top: 15px;
+      }
+
+      .action-buttons .btn {
+        flex: 1;
+        max-width: 80px;
       }
 
       .pagination-section {
         flex-direction: column;
         text-align: center;
+        padding: 20px;
       }
 
-      .action-buttons {
+      .pagination {
+        justify-content: center;
+      }
+    }
+
+    /* Tablet Responsive */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      }
+
+      .header-actions {
         flex-direction: column;
+        gap: 10px;
+      }
+
+      .filter-controls {
+        flex-direction: column;
+        gap: 10px;
+      }
+    }
+
+    /* Large Desktop */
+    @media (min-width: 1200px) {
+      .stats-grid {
+        grid-template-columns: repeat(5, 1fr);
+      }
+
+      .container {
+        max-width: 1400px;
       }
     }
   `]
@@ -309,6 +590,8 @@ export class StockListComponent implements OnInit {
   categories: any[] = [];
   brands: any[] = [];
   locations: any[] = [];
+  pcs: any[] = [];
+  pcComponents: any[] = [];
   filteredStocks: any[] = [];
   searchTerm = '';
   selectedType = '';
@@ -324,12 +607,22 @@ export class StockListComponent implements OnInit {
     private categoryService: CategoryService,
     private brandService: BrandService,
     private locationService: StorageLocationService,
+    private pcService: PCService,
+    private pcComponentService: PCComponentService,
     private alertService: AlertService,
     public accountService: AccountService
   ) { }
 
   ngOnInit() {
     this.loadData();
+    
+    // Listen for stock data changes from PC components
+    window.addEventListener('stockDataChanged', this.handleStockDataChange.bind(this));
+  }
+
+  ngOnDestroy() {
+    // Clean up event listener
+    window.removeEventListener('stockDataChanged', this.handleStockDataChange.bind(this));
   }
 
   loadData() {
@@ -338,6 +631,8 @@ export class StockListComponent implements OnInit {
     this.loadCategories();
     this.loadBrands();
     this.loadLocations();
+    this.loadPCs();
+    this.loadPCComponents();
   }
 
   loadStocks() {
@@ -406,6 +701,34 @@ export class StockListComponent implements OnInit {
       });
   }
 
+  loadPCs() {
+    this.pcService.getAll()
+      .pipe(first())
+      .subscribe({
+        next: (pcs) => {
+          this.pcs = pcs;
+        },
+        error: error => {
+          this.alertService.error(error);
+        }
+      });
+  }
+
+  loadPCComponents() {
+    this.pcComponentService.getAll()
+      .pipe(first())
+      .subscribe({
+        next: (components) => {
+          this.pcComponents = components;
+          console.log('PC Components loaded:', this.pcComponents.length);
+        },
+        error: error => {
+          console.error('Error loading PC Components:', error);
+          this.pcComponents = [];
+        }
+      });
+  }
+
   applyFilters() {
     let filtered = [...this.stocks];
 
@@ -465,6 +788,10 @@ export class StockListComponent implements OnInit {
     }, 0);
   }
 
+  getPCComponentsCount(): number {
+    return this.pcComponents.length;
+  }
+
   getItemName(itemId: number): string {
     const item = this.items.find(i => i.id === itemId);
     return item ? item.name : 'Unknown Item';
@@ -491,6 +818,30 @@ export class StockListComponent implements OnInit {
     return location ? location.name : 'Unknown Location';
   }
 
+  isItemInUse(itemId: number): boolean {
+    // Check if any PC component is using this item
+    return this.pcComponents.some(component => component.itemId === itemId);
+  }
+
+  getInUseCount(itemId: number): number {
+    // Count total quantity used in PC components for this item
+    return this.pcComponents
+      .filter(component => component.itemId === itemId)
+      .reduce((total, component) => total + component.quantity, 0);
+  }
+
+  getInUseDetails(itemId: number): string {
+    const components = this.pcComponents.filter(component => component.itemId === itemId);
+    if (components.length === 0) {
+      return 'Available';
+    }
+    
+    const totalQuantity = components.reduce((total, component) => total + component.quantity, 0);
+    const pcCount = components.length;
+    
+    return `${totalQuantity} units in ${pcCount} PC${pcCount > 1 ? 's' : ''}`;
+  }
+
   hasRole(roles: Role[]): boolean {
     const account = this.accountService.accountValue;
     if (!account) return false;
@@ -500,14 +851,17 @@ export class StockListComponent implements OnInit {
   }
 
   viewStock(id: number) {
+    console.log('View stock clicked for ID:', id);
     this.router.navigate(['/stocks', id]);
   }
 
   editStock(id: number) {
+    console.log('Edit stock clicked for ID:', id);
     this.router.navigate(['/stocks', id, 'edit']);
   }
 
   deleteStock(id: number) {
+    console.log('Delete stock clicked for ID:', id);
     if (confirm('Are you sure you want to delete this stock entry?')) {
       this.stockService.delete(id)
         .pipe(first())
@@ -515,8 +869,12 @@ export class StockListComponent implements OnInit {
           next: () => {
             this.alertService.success('Stock deleted successfully');
             this.loadStocks();
+            
+            // Notify other components about stock data change
+            this.notifyStockDataChange();
           },
           error: error => {
+            console.error('Error deleting stock:', error);
             this.alertService.error(error);
           }
         });
@@ -524,6 +882,7 @@ export class StockListComponent implements OnInit {
   }
 
   disposeStock(stock: any) {
+    console.log('Dispose stock clicked for stock:', stock);
     this.router.navigate(['/dispose/add'], { 
       queryParams: { 
         itemId: stock.itemId,
@@ -534,9 +893,22 @@ export class StockListComponent implements OnInit {
 
   getAvailableStock(itemId: number): number {
     const itemStocks = this.stocks.filter(s => s.itemId === itemId);
-    const additions = itemStocks.filter(s => !s.disposeId).reduce((sum, s) => sum + s.quantity, 0);
-    const disposals = itemStocks.filter(s => s.disposeId).reduce((sum, s) => sum + s.quantity, 0);
-    return Math.max(0, additions - disposals);
+    // Sum all positive quantities
+    return itemStocks.filter(s => s.quantity > 0).reduce((sum, s) => sum + s.quantity, 0);
+  }
+
+  getStockSummary(itemId: number): { total: number; available: number; inUse: number; usedInPCs: number } {
+    const totalStock = this.getAvailableStock(itemId);
+    const inUseQuantity = this.getInUseCount(itemId);
+    const availableQuantity = Math.max(0, totalStock - inUseQuantity);
+    const usedInPCs = this.pcComponents.filter(component => component.itemId === itemId).length;
+    
+    return {
+      total: totalStock,
+      available: availableQuantity,
+      inUse: inUseQuantity,
+      usedInPCs: usedInPCs
+    };
   }
 
   // Pagination methods
@@ -579,5 +951,61 @@ export class StockListComponent implements OnInit {
     if (this.currentPage < this.totalPages) {
       this.currentPage++;
     }
+  }
+
+  // Handle stock data changes from PC components
+  private handleStockDataChange(event: CustomEvent) {
+    console.log('Stock data change detected:', event.detail);
+    console.log('Refreshing stock list data...');
+    
+    // Refresh all data to get updated stock quantities
+    this.loadData();
+    
+    // Show a brief notification with more details
+    const message = event.detail?.message || 'Stock data updated';
+    this.alertService.info(`${message} - quantities refreshed globally`);
+    
+    // Broadcast the change to other components that might need updating
+    this.broadcastStockChange(event.detail);
+  }
+
+  // Method to notify other components about stock data changes
+  private notifyStockDataChange() {
+    // Dispatch a custom event that other components can listen to
+    const event = new CustomEvent('stockDataChanged', {
+      detail: {
+        timestamp: new Date().getTime(),
+        message: 'Stock deleted - stock data updated'
+      }
+    });
+    window.dispatchEvent(event);
+    console.log('Stock data change event dispatched from stock list component');
+  }
+
+  // Broadcast stock changes to all components that might need updating
+  private broadcastStockChange(detail: any) {
+    // Dispatch additional events for specific components
+    const events = [
+      {
+        name: 'pcStockDataChanged',
+        detail: { ...detail, target: 'pc-components' }
+      },
+      {
+        name: 'disposeStockDataChanged', 
+        detail: { ...detail, target: 'dispose' }
+      },
+      {
+        name: 'stockEditDataChanged',
+        detail: { ...detail, target: 'stock-edit' }
+      }
+    ];
+
+    events.forEach(eventInfo => {
+      const event = new CustomEvent(eventInfo.name, {
+        detail: eventInfo.detail
+      });
+      window.dispatchEvent(event);
+      console.log(`Broadcasting ${eventInfo.name} event`);
+    });
   }
 }

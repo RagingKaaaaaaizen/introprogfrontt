@@ -42,7 +42,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3 col-sm-6">
+                <div class="col-md-3 col-sm-6" *ngIf="hasRole([Role.SuperAdmin, Role.Admin, Role.Viewer])">
                     <div class="stat-card">
                         <div class="stat-icon">
                             <i class="fas fa-desktop"></i>
@@ -87,6 +87,10 @@
                             <i class="fas fa-users-cog"></i>
                             <span>Manage employees and departments</span>
                         </div>
+                        <div class="permission-item" *ngIf="hasRole([Role.SuperAdmin, Role.Admin, Role.Viewer])">
+                            <i class="fas fa-desktop"></i>
+                            <span>View PC management and components</span>
+                        </div>
                         <div class="permission-item" *ngIf="hasRole([Role.SuperAdmin])">
                             <i class="fas fa-cogs"></i>
                             <span>Manage user accounts and system administration</span>
@@ -116,7 +120,7 @@
                             <i class="fas fa-plus-circle"></i>
                             <span>Add Items</span>
                         </a>
-                        <a routerLink="/pc" class="action-item" *ngIf="hasRole([Role.SuperAdmin, Role.Admin])">
+                        <a routerLink="/pc" class="action-item" *ngIf="hasRole([Role.SuperAdmin, Role.Admin, Role.Viewer])">
                             <i class="fas fa-desktop"></i>
                             <span>PC Management</span>
                         </a>

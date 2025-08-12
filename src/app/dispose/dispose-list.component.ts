@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { first } from 'rxjs/operators';
 
-import { DisposeService, Dispose } from '../_services/dispose.service';
+import { DisposeService } from '../_services/dispose.service';
+import { Dispose } from '../_models';
 import { AccountService, AlertService, CategoryService, StorageLocationService } from '@app/_services';
 import { Role } from '../_models';
 
@@ -450,14 +451,17 @@ export class DisposeListComponent implements OnInit {
   }
 
   viewDisposal(id: number) {
+    console.log('View disposal clicked for ID:', id);
     this.router.navigate(['/dispose/view', id]);
   }
 
   editDisposal(id: number) {
+    console.log('Edit disposal clicked for ID:', id);
     this.router.navigate(['/dispose/edit', id]);
   }
 
   deleteDisposal(id: number) {
+    console.log('Delete disposal clicked for ID:', id);
     if (confirm('Are you sure you want to delete this disposal record?')) {
       this.disposeService.delete(id)
         .pipe(first())
@@ -489,10 +493,12 @@ export class DisposeListComponent implements OnInit {
   }
 
   viewStockInfo(itemId: number) {
+    console.log('View stock info clicked for item ID:', itemId);
     this.router.navigate(['/stocks'], { queryParams: { highlightItem: itemId } });
   }
 
   addNewDisposal() {
+    console.log('Add new disposal clicked');
     this.router.navigate(['/dispose/add']);
   }
 

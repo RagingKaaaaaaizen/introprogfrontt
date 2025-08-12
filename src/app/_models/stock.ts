@@ -11,7 +11,7 @@ export class Stock {
   createdBy?: number;         // User ID
 
   // Optional joined data from backend (for display only)
-  item?: { id: number; name: string };
-  location?: { id: number; name: string };
-  disposal?: { id: number; quantity: number; disposalValue: number; reason: string; disposalDate: Date };
+  item?: { id?: number; name: string };
+  location?: { id?: number; name: string };
+  disposal?: { id?: number; quantity: number; disposalValue: number; reason: string; disposalDate: Date };
 }
