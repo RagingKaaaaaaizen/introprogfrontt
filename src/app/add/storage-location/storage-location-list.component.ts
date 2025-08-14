@@ -527,20 +527,31 @@ export class StorageLocationListComponent implements OnInit {
     this.router.navigate(['/add/storage-locations/edit', id]);
   }
 
+  private getLocationTypeById(id: number): 'Storage Location' | 'Room Location' | null {
+    const loc = this.locations.find(l => l.id === id);
+    return loc ? (loc.locationType as any) : null;
+  }
+
   deleteLocation(id: number) {
-    if (confirm('Are you sure you want to delete this storage location?')) {
-      this.storageLocationService.delete(id)
-        .pipe(first())
-        .subscribe({
-          next: () => {
-            this.alertService.success('Storage location deleted successfully');
-            this.loadLocations();
-          },
-          error: (error) => {
-            this.alertService.error('Error deleting storage location');
-          }
-        });
-    }
+    if (!confirm('Are you sure you want to delete this location?')) return;
+
+    const type = this.getLocationTypeById(id);
+
+    const delete$ = type === 'Room Location'
+      ? this.roomLocationService.delete(id)
+      : this.storageLocationService.delete(id);
+
+    delete$
+      .pipe(first())
+      .subscribe({
+        next: () => {
+          this.alertService.success('Location deleted successfully');
+          this.loadLocations();
+        },
+        error: () => {
+          this.alertService.error('Error deleting location');
+        }
+      });
   }
 
   // Pagination methods
