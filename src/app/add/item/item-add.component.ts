@@ -206,7 +206,7 @@ import { AlertService } from '../../_services/alert.service';
       }
     }
 
-    // Search functionality styles
+    /* Search functionality styles */
     .search-input-container {
       position: relative;
     }
