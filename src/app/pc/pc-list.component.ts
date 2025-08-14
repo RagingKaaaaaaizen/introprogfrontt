@@ -719,16 +719,14 @@ export class PCListComponent implements OnInit {
     return roles.some(role => role === userRole);
   }
 
-  viewPC(id: number) {
-    this.router.navigate(['/pc', id]);
-  }
+
 
   viewComponents(id: number) {
     this.router.navigate(['/pc', id, 'components']);
   }
 
   editPC(id: number) {
-    this.router.navigate(['/pc', id, 'edit']);
+    this.router.navigate(['/pc/edit', id]);
   }
 
   deletePC(id: number) {

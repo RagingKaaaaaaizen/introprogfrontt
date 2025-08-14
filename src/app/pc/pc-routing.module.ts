@@ -10,7 +10,6 @@ const routes: Routes = [
     { path: '', component: PCListComponent, canActivate: [AuthGuard], data: { roles: [Role.SuperAdmin, Role.Admin, Role.Viewer] } },
     { path: 'add', component: PCAddEditComponent, canActivate: [AuthGuard], data: { roles: [Role.SuperAdmin, Role.Admin] } },
     { path: 'edit/:id', component: PCAddEditComponent, canActivate: [AuthGuard], data: { roles: [Role.SuperAdmin, Role.Admin] } },
-    { path: 'view/:id', component: PCAddEditComponent, canActivate: [AuthGuard], data: { roles: [Role.SuperAdmin, Role.Admin, Role.Viewer] } },
     { path: ':id/components', component: PCComponentsComponent, canActivate: [AuthGuard], data: { roles: [Role.SuperAdmin, Role.Admin, Role.Viewer] } }
 ];
 

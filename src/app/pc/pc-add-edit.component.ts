@@ -28,6 +28,8 @@ export class PCAddEditComponent implements OnInit {
         this.id = this.route.snapshot.params['id'];
         this.isAddMode = !this.id;
         this.isViewMode = this.router.url.includes('/view/');
+        
+        console.log('PC Add/Edit Component - ID:', this.id, 'isAddMode:', this.isAddMode, 'isViewMode:', this.isViewMode);
 
         this.form = this.formBuilder.group({
             name: ['', Validators.required],
@@ -59,10 +61,18 @@ export class PCAddEditComponent implements OnInit {
     }
 
     loadPC() {
+        console.log('Loading PC with ID:', this.id);
         this.pcService.getById(this.id)
             .pipe(first())
-            .subscribe(pc => {
-                this.form.patchValue(pc);
+            .subscribe({
+                next: (pc) => {
+                    console.log('PC loaded for editing:', pc);
+                    this.form.patchValue(pc);
+                },
+                error: (error) => {
+                    console.error('Error loading PC:', error);
+                    this.alertService.error('Error loading PC data');
+                }
             });
     }
 
