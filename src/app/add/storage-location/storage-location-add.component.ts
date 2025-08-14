@@ -138,6 +138,19 @@ import { AlertService } from '../../_services/alert.service';
       background-color: #fff;
     }
 
+    /* Make the location type dropdown text readable and bigger */
+    .centered-select {
+      height: 150%; /* ~50% taller than default */
+      min-height: 48px; /* ensure a good tap target */
+      line-height: 1.5; /* improve vertical spacing */
+      text-align: center;
+      color: #2c2c2c;
+      font-weight: 600;
+    }
+    .centered-select option {
+      text-align: center;
+    }
+
     .form-control:focus {
       border-color: #667eea;
       box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
