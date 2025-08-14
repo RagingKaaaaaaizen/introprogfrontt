@@ -281,8 +281,6 @@ export class StorageLocationAddComponent {
   onLocationTypeChange() {
     // Reset room-specific fields when switching to storage type
     if (this.model.locationType === 'storage') {
-      this.model.building = '';
-      this.model.floor = '';
       this.model.roomNumber = '';
       this.model.capacity = null;
       this.model.status = 'Active';
@@ -328,8 +326,6 @@ export class StorageLocationAddComponent {
       const roomData: any = {
         name: this.model.name,
         description: this.model.description,
-        building: this.model.building,
-        floor: this.model.floor,
         roomNumber: this.model.roomNumber,
         capacity: this.model.capacity,
         status: this.model.status

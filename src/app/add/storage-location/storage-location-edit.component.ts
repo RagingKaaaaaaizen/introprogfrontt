@@ -283,8 +283,6 @@ export class StorageLocationEditComponent implements OnInit {
       name: ['', Validators.required],
       locationType: ['', Validators.required],
       description: [''],
-      building: [''],
-      floor: [''],
       roomNumber: [''],
       capacity: [null],
       status: ['Active']
@@ -382,8 +380,6 @@ export class StorageLocationEditComponent implements OnInit {
       const roomData = {
         name: formData.name,
         description: formData.description,
-        building: formData.building,
-        floor: formData.floor,
         roomNumber: formData.roomNumber,
         capacity: formData.capacity,
         status: formData.status
