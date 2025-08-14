@@ -48,48 +48,72 @@
 
                         <!-- Category and Brand Row -->
                         <div class="form-row">
-                            <!-- Select Category -->
+                            <!-- Category Input with Search -->
                             <div class="form-group col-md-6">
                                 <label class="form-label">
                                     <i class="fas fa-folder"></i>
                                     Category
                                 </label>
-                                <select
-                                    class="form-control"
-                                    formControlName="categoryId"
-                                    [disabled]="isViewMode"
-                                    [ngClass]="{ 'is-invalid': form.get('categoryId')?.invalid && form.get('categoryId')?.touched }"
-                                >
-                                    <option value="">Select Category</option>
-                                    <option *ngFor="let cat of categories" [value]="cat.id">
-                                        {{ cat.name }}
-                                    </option>
-                                </select>
-                                <div class="invalid-feedback" *ngIf="form.get('categoryId')?.invalid && form.get('categoryId')?.touched">
-                                    Category is required
+                                <div class="search-input-container">
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        [formControl]="categoryNameControl"
+                                        placeholder="Type category name or select from list"
+                                        autocomplete="off"
+                                        [readonly]="isViewMode"
+                                        (input)="searchCategories($event)"
+                                        (focus)="showCategoryResults = true"
+                                        (blur)="onCategoryBlur()"
+
+                                    />
+                                    <!-- Category Search Results -->
+                                    <div class="search-results" *ngIf="showCategoryResults && filteredCategories.length > 0 && !isViewMode">
+                                        <div 
+                                            class="search-result-item" 
+                                            *ngFor="let category of filteredCategories"
+                                            (mousedown)="$event.preventDefault(); selectCategory(category)"
+                                        >
+                                            <i class="fas fa-folder text-primary"></i>
+                                            {{ category.name }}
+                                        </div>
+                                    </div>
                                 </div>
+
                             </div>
 
-                            <!-- Select Brand -->
+                            <!-- Brand Input with Search -->
                             <div class="form-group col-md-6">
                                 <label class="form-label">
                                     <i class="fas fa-trademark"></i>
                                     Brand
                                 </label>
-                                <select
-                                    class="form-control"
-                                    formControlName="brandId"
-                                    [disabled]="isViewMode"
-                                    [ngClass]="{ 'is-invalid': form.get('brandId')?.invalid && form.get('brandId')?.touched }"
-                                >
-                                    <option value="">Select Brand</option>
-                                    <option *ngFor="let brand of brands" [value]="brand.id">
-                                        {{ brand.name }}
-                                    </option>
-                                </select>
-                                <div class="invalid-feedback" *ngIf="form.get('brandId')?.invalid && form.get('brandId')?.touched">
-                                    Brand is required
+                                <div class="search-input-container">
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        [formControl]="brandNameControl"
+                                        placeholder="Enter brand name or select from list"
+                                        autocomplete="off"
+                                        [readonly]="isViewMode"
+                                        (input)="searchBrands($event)"
+                                        (focus)="showBrandResults = true"
+                                        (blur)="onBrandBlur()"
+
+                                    />
+                                    <!-- Brand Search Results -->
+                                    <div class="search-results" *ngIf="showBrandResults && filteredBrands.length > 0 && !isViewMode">
+                                        <div 
+                                            class="search-result-item" 
+                                            *ngFor="let brand of filteredBrands"
+                                            (mousedown)="$event.preventDefault(); selectBrand(brand)"
+                                        >
+                                            <i class="fas fa-trademark text-info"></i>
+                                            {{ brand.name }}
+                                        </div>
+                                    </div>
                                 </div>
+
                             </div>
                         </div>
 
@@ -114,7 +138,7 @@
                                 <i class="fas fa-times"></i>
                                 Cancel
                             </button>
-                            <button *ngIf="!isViewMode" type="submit" class="btn btn-primary" [disabled]="form.invalid || loading">
+                            <button *ngIf="!isViewMode" type="submit" class="btn btn-primary" [disabled]="loading">
                                 <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
                                 <i *ngIf="!loading" class="fas fa-save me-2"></i>
                                 {{ loading ? 'Saving...' : 'Save Changes' }}

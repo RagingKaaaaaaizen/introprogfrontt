@@ -49,48 +49,76 @@
 
                         <!-- Category and Brand Row -->
                         <div class="form-row">
-                            <!-- Select Category -->
+                            <!-- Category Input with Search -->
                             <div class="form-group col-md-6">
                                 <label class="form-label">
                                     <i class="fas fa-folder"></i>
                                     Category
                                 </label>
-                                <select
-                                    class="form-control"
-                                    [(ngModel)]="model.categoryId"
-                                    name="categoryId"
-                                    required
-                                    [ngClass]="{ 'is-invalid': submitted && !model.categoryId }"
-                                >
-                                    <option value="" disabled>Select Category</option>
-                                    <option *ngFor="let category of categories" [value]="category.id">
-                                        {{ category.name }}
-                                    </option>
-                                </select>
-                                <div class="invalid-feedback" *ngIf="submitted && !model.categoryId">
+                                <div class="search-input-container">
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        [(ngModel)]="model.categoryName"
+                                        name="categoryName"
+                                        placeholder="Type category name or select from list"
+                                        autocomplete="off"
+                                        required
+                                        (input)="searchCategories($event)"
+                                        (focus)="showCategoryResults = true"
+                                        (blur)="onCategoryBlur()"
+                                        [ngClass]="{ 'is-invalid': submitted && !model.categoryId && !model.categoryName }"
+                                    />
+                                    <!-- Category Search Results -->
+                                    <div class="search-results" *ngIf="showCategoryResults && filteredCategories.length > 0">
+                                        <div 
+                                            class="search-result-item" 
+                                            *ngFor="let category of filteredCategories"
+                                            (mousedown)="$event.preventDefault(); selectCategory(category)"
+                                        >
+                                            <i class="fas fa-folder text-primary"></i>
+                                            {{ category.name }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="invalid-feedback" *ngIf="submitted && !model.categoryId && !model.categoryName">
                                     Category is required
                                 </div>
                             </div>
 
-                            <!-- Select Brand -->
+                            <!-- Brand Input with Search -->
                             <div class="form-group col-md-6">
                                 <label class="form-label">
                                     <i class="fas fa-trademark"></i>
                                     Brand
                                 </label>
-                                <select
-                                    class="form-control"
-                                    [(ngModel)]="model.brandId"
-                                    name="brandId"
-                                    required
-                                    [ngClass]="{ 'is-invalid': submitted && !model.brandId }"
-                                >
-                                    <option value="" disabled>Select Brand</option>
-                                    <option *ngFor="let brand of brands" [value]="brand.id">
-                                        {{ brand.name }}
-                                    </option>
-                                </select>
-                                <div class="invalid-feedback" *ngIf="submitted && !model.brandId">
+                                <div class="search-input-container">
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        [(ngModel)]="model.brandName"
+                                        name="brandName"
+                                        placeholder="Type brand name or select from list"
+                                        autocomplete="off"
+                                        required
+                                        (input)="searchBrands($event)"
+                                        (focus)="showBrandResults = true"
+                                        (blur)="onBrandBlur()"
+                                        [ngClass]="{ 'is-invalid': submitted && !model.brandId && !model.brandName }"
+                                    />
+                                    <!-- Brand Search Results -->
+                                    <div class="search-results" *ngIf="showBrandResults && filteredBrands.length > 0">
+                                        <div 
+                                            class="search-result-item" 
+                                            *ngFor="let brand of filteredBrands"
+                                            (mousedown)="$event.preventDefault(); selectBrand(brand)"
+                                        >
+                                            <i class="fas fa-trademark text-info"></i>
+                                            {{ brand.name }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="invalid-feedback" *ngIf="submitted && !model.brandId && !model.brandName">
                                     Brand is required
                                 </div>
                             </div>
