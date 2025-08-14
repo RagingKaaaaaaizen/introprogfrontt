@@ -205,12 +205,62 @@ import { AlertService } from '../../_services/alert.service';
         padding: 20px;
       }
     }
+
+    // Search functionality styles
+    .search-input-container {
+      position: relative;
+    }
+
+    .search-results {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ddd;
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      z-index: 1000;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .search-result-item {
+      padding: 10px 15px;
+      cursor: pointer;
+      border-bottom: 1px solid #f0f0f0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: background-color 0.2s ease;
+    }
+
+    .search-result-item:hover {
+      background-color: #f8f9fa;
+    }
+
+    .search-result-item:last-child {
+      border-bottom: none;
+    }
+
+
+
+    .search-result-item i {
+      font-size: 14px;
+    }
   `]
 })
 export class ItemAddComponent implements OnInit {
   model: any = {};
   categories: any[] = [];
   brands: any[] = [];
+  filteredCategories: any[] = [];
+  filteredBrands: any[] = [];
+  showCategoryResults = false;
+  showBrandResults = false;
+  categoryExists = false;
+  brandExists = false;
   loading = false;
   submitted = false;
 
@@ -255,30 +305,158 @@ export class ItemAddComponent implements OnInit {
       });
   }
 
-  saveItem() {
+  // Search and selection methods for categories
+  searchCategories(event: any) {
+    const searchTerm = event.target.value.toLowerCase();
+    this.model.categoryName = event.target.value;
+    
+    if (searchTerm.length === 0) {
+      this.filteredCategories = [];
+      this.showCategoryResults = false;
+      this.categoryExists = false;
+      return;
+    }
+
+    this.filteredCategories = this.categories.filter(category => 
+      category.name.toLowerCase().includes(searchTerm)
+    );
+    
+    this.categoryExists = this.categories.some(category => 
+      category.name.toLowerCase() === searchTerm
+    );
+    
+    this.showCategoryResults = true;
+  }
+
+  selectCategory(category: any) {
+    this.model.categoryId = category.id;
+    this.model.categoryName = category.name;
+    this.showCategoryResults = false;
+    this.categoryExists = true;
+  }
+
+  onCategoryBlur() {
+    setTimeout(() => {
+      this.showCategoryResults = false;
+    }, 200);
+  }
+
+  // Search and selection methods for brands
+  searchBrands(event: any) {
+    const searchTerm = event.target.value.toLowerCase();
+    this.model.brandName = event.target.value;
+    
+    if (searchTerm.length === 0) {
+      this.filteredBrands = [];
+      this.showBrandResults = false;
+      this.brandExists = false;
+      return;
+    }
+
+    this.filteredBrands = this.brands.filter(brand => 
+      brand.name.toLowerCase().includes(searchTerm)
+    );
+    
+    this.brandExists = this.brands.some(brand => 
+      brand.name.toLowerCase() === searchTerm
+    );
+    
+    this.showBrandResults = true;
+  }
+
+  selectBrand(brand: any) {
+    this.model.brandId = brand.id;
+    this.model.brandName = brand.name;
+    this.showBrandResults = false;
+    this.brandExists = true;
+  }
+
+  onBrandBlur() {
+    setTimeout(() => {
+      this.showBrandResults = false;
+    }, 200);
+  }
+
+  async saveItem() {
     this.submitted = true;
     this.loading = true;
 
     console.log('Submitting payload:', this.model);
 
-    if (!this.model.name || !this.model.categoryId || !this.model.brandId) {
+    if (!this.model.name || (!this.model.categoryId && !this.model.categoryName) || (!this.model.brandId && !this.model.brandName)) {
       this.alertService.error('Item name, category, and brand are required');
       this.loading = false;
       return;
     }
 
-    this.itemService.create(this.model)
-      .pipe(first())
-      .subscribe({
-        next: () => {
-          this.alertService.success('Item saved successfully!');
-          this.router.navigate(['/add/item']);
-        },
-        error: (err) => {
-          console.error(err);
-          this.alertService.error('Failed to save item');
-          this.loading = false;
-        }
-      });
+    try {
+      // Handle category creation if needed
+      if (!this.model.categoryId && this.model.categoryName) {
+        const newCategory = await this.createCategory(this.model.categoryName);
+        this.model.categoryId = newCategory.id;
+      }
+
+      // Handle brand creation if needed
+      if (!this.model.brandId && this.model.brandName) {
+        const newBrand = await this.createBrand(this.model.brandName);
+        this.model.brandId = newBrand.id;
+      }
+
+      // Now save the item
+      this.itemService.create(this.model)
+        .pipe(first())
+        .subscribe({
+          next: () => {
+            this.alertService.success('Item saved successfully!');
+            this.router.navigate(['/add/item']);
+          },
+          error: (err) => {
+            console.error(err);
+            this.alertService.error('Failed to save item');
+            this.loading = false;
+          }
+        });
+
+    } catch (error) {
+      console.error('Error creating category or brand:', error);
+      this.alertService.error('Failed to create category or brand');
+      this.loading = false;
+    }
+  }
+
+  private createCategory(name: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      this.categoryService.create({ name })
+        .pipe(first())
+        .subscribe({
+          next: (category) => {
+            console.log('New category created:', category);
+            this.categories.push(category);
+            resolve(category);
+          },
+          error: (err) => {
+            console.error('Failed to create category:', err);
+            reject(err);
+          }
+        });
+    });
+  }
+
+  private createBrand(name: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      this.brandService.create({ name })
+        .pipe(first())
+        .subscribe({
+          next: (brand) => {
+            console.log('New brand created:', brand);
+            this.brands.push(brand);
+            resolve(brand);
+          },
+          error: (err) => {
+            console.error('Failed to create brand:', err);
+            reject(err);
+          }
+        });
+    });
   }
 }
