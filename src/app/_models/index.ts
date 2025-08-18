@@ -12,3 +12,4 @@ export * from './room-location';
 export * from './pc';
 export * from './dispose';
 export * from './pc-component';
+export * from './activity-log';

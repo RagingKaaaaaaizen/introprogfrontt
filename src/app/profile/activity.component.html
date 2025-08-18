@@ -1,0 +1,167 @@
+<div class="activity-log-container">
+    <div class="page-header">
+        <div class="header-content">
+            <div class="header-title">
+                <i class="fas fa-history"></i>
+                <div>
+                    <h1 class="page-title">
+                        <span *ngIf="selectedUserId && canViewOtherUserLogs()">
+                            {{ getSelectedUserName() }}'s Activity Logs
+                        </span>
+                        <span *ngIf="!selectedUserId || !canViewOtherUserLogs()">
+                            Activity Logs
+                        </span>
+                    </h1>
+                    <p class="page-subtitle">
+                        <span *ngIf="selectedUserId && canViewOtherUserLogs()">
+                            Viewing activity logs for {{ getSelectedUserName() }}
+                        </span>
+                        <span *ngIf="!selectedUserId || !canViewOtherUserLogs()">
+                            Track your system activities and changes
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Selection for Admins -->
+    <div class="profile-card" *ngIf="canViewOtherUserLogs()">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-users"></i>
+                User Selection
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="userFilter">Select User to View Logs</label>
+                        <select id="userFilter" class="form-control" [(ngModel)]="selectedUserId" (change)="onUserChange()">
+                            <option [value]="null">All Users</option>
+                            <option *ngFor="let user of users" [value]="user.id">
+                                {{ getUserDisplayName(user) }}
+                            </option>
+                        </select>
+                        <small class="form-text text-muted">
+                            Choose a specific user to view their activity logs, or select "All Users" to see all system activity.
+                        </small>
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end">
+                        <div class="current-user-info">
+                            <strong>Current User:</strong> {{ currentUser?.firstName }} {{ currentUser?.lastName }} ({{ currentUser?.role }})
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="profile-card" *ngIf="showFilters">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-filter"></i>
+                Filters
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label for="actionFilter">Action</label>
+                        <select id="actionFilter" class="form-control" [(ngModel)]="filters.action">
+                            <option value="">All Actions</option>
+                            <option *ngFor="let action of actions" [value]="action">
+                                {{ getActionDisplayName(action) }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="entityTypeFilter">Entity Type</label>
+                        <select id="entityTypeFilter" class="form-control" [(ngModel)]="filters.entityType">
+                            <option value="">All Types</option>
+                            <option *ngFor="let type of entityTypes" [value]="type">
+                                {{ getEntityTypeDisplayName(type) }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end">
+                        <button class="btn btn-primary me-2" (click)="applyFilters()">
+                            <i class="fas fa-filter"></i> Apply Filters
+                        </button>
+                        <button class="btn btn-secondary" (click)="clearFilters()">
+                            <i class="fas fa-times"></i> Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Logs -->
+    <div class="profile-card">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-list"></i>
+                Activity History
+            </div>
+            <div class="card-body">
+                <div class="log-item" *ngFor="let log of logs" class="mb-3">
+                    <div class="log-entry">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="log-content">
+                                <h6 class="log-title mb-1">
+                                    <strong>{{ log.user?.firstName }} {{ log.user?.lastName }}</strong>
+                                    {{ getActionDisplayName(log.action) }}
+                                    <span *ngIf="log.entityName">"{{ log.entityName }}"</span>
+                                </h6>
+                                <p class="log-meta text-muted mb-1">
+                                    <small>
+                                        <i class="fas fa-tag me-1"></i>
+                                        {{ getEntityTypeDisplayName(log.entityType) }}
+                                        <span *ngIf="log.entityId">#{{ log.entityId }}</span>
+                                    </small>
+                                </p>
+                                <p class="log-time text-muted mb-0">
+                                    <small>
+                                        <i class="fas fa-clock me-1"></i>
+                                        {{ log.createdAt | date:'medium' }}
+                                    </small>
+                                </p>
+                            </div>
+                            <div class="log-actions">
+                                <button class="btn btn-sm btn-outline-info" 
+                                        (click)="viewDetails(log)"
+                                        title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Load More Button -->
+                <div class="text-center mt-3" *ngIf="hasMore">
+                    <button class="btn btn-outline-primary" 
+                            (click)="loadMore()" 
+                            [disabled]="loading">
+                        <span *ngIf="!loading">Load More</span>
+                        <span *ngIf="loading">
+                            <i class="fas fa-spinner fa-spin"></i> Loading...
+                        </span>
+                    </button>
+                </div>
+
+                <!-- No Logs Message -->
+                <div class="text-center text-muted mt-4" *ngIf="logs.length === 0 && !loading">
+                    <i class="fas fa-info-circle fa-2x mb-2"></i>
+                    <p>No activity logs found.</p>
+                </div>
+
+                <!-- Loading Message -->
+                <div class="text-center text-muted mt-4" *ngIf="loading && logs.length === 0">
+                    <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                    <p>Loading activity logs...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

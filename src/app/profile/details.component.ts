@@ -378,4 +378,9 @@ export class DetailsComponent {
     account = this.accountService.accountValue;
 
     constructor(private accountService: AccountService) { }
+
+    // Check if current user is an admin
+    get isAdmin(): boolean {
+        return this.account?.role === 'Admin' || this.account?.role === 'SuperAdmin';
+    }
 }
