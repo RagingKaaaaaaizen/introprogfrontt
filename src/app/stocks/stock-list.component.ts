@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { first } from 'rxjs/operators';
+import * as XLSX from 'xlsx';
 
 import { AccountService, AlertService, StockService, ItemService, CategoryService, BrandService, StorageLocationService, PCService, PCComponentService } from '@app/_services';
 import { Role } from '@app/_models';
@@ -950,6 +951,61 @@ export class StockListComponent implements OnInit {
   nextPage() {
     if (this.currentPage < this.totalPages) {
       this.currentPage++;
+    }
+  }
+
+  // Excel Export functionality
+  exportToExcel() {
+    try {
+      // Prepare data for export
+      const exportData = this.filteredStocks.map(stock => ({
+        'Item Name': this.getItemName(stock.itemId),
+        'Category': this.getCategoryName(stock),
+        'Brand': this.getBrandName(stock),
+        'Location': this.getLocationName(stock),
+        'Quantity': stock.quantity,
+        'Price': stock.price,
+        'Total Value': stock.price * stock.quantity,
+        'Type': stock.disposeId ? 'Disposal' : 'Addition',
+        'In Use': this.isItemInUse(stock.itemId) ? 'Yes' : 'No',
+        'Stock Summary': `Total: ${this.getStockSummary(stock.itemId).total} | Available: ${this.getStockSummary(stock.itemId).available} | In Use: ${this.getStockSummary(stock.itemId).inUse}`,
+        'Remarks': stock.remarks || '',
+        'Date': stock.createdAt ? new Date(stock.createdAt).toLocaleDateString() : ''
+      }));
+
+      // Create workbook and worksheet
+      const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(exportData);
+      const wb: XLSX.WorkBook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Stock Entries');
+
+      // Auto-size columns
+      const colWidths = [
+        { wch: 25 }, // Item Name
+        { wch: 15 }, // Category
+        { wch: 15 }, // Brand
+        { wch: 20 }, // Location
+        { wch: 10 }, // Quantity
+        { wch: 12 }, // Price
+        { wch: 15 }, // Total Value
+        { wch: 10 }, // Type
+        { wch: 8 },  // In Use
+        { wch: 50 }, // Stock Summary
+        { wch: 30 }, // Remarks
+        { wch: 12 }  // Date
+      ];
+      ws['!cols'] = colWidths;
+
+      // Generate filename with current date
+      const date = new Date().toISOString().split('T')[0];
+      const filename = `Stock_Entries_${date}.xlsx`;
+
+      // Save file
+      XLSX.writeFile(wb, filename);
+      
+      this.alertService.success('Stock entries exported to Excel successfully!');
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+      this.alertService.error('Failed to export stock entries to Excel');
     }
   }
 

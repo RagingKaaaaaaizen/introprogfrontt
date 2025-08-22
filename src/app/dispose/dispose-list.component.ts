@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { first } from 'rxjs/operators';
+import * as XLSX from 'xlsx';
 
 import { DisposeService } from '../_services/dispose.service';
 import { Dispose } from '../_models';
@@ -541,6 +542,61 @@ export class DisposeListComponent implements OnInit {
   nextPage() {
     if (this.currentPage < this.totalPages) {
       this.currentPage++;
+    }
+  }
+
+  // Excel Export functionality
+  exportToExcel() {
+    try {
+      // Prepare data for export
+      const exportData = this.filteredDisposals.map(disposal => ({
+        'Item Name': disposal.item?.name || 'Unknown Item',
+        'Category': disposal.item?.category?.name || 'No Category',
+        'Brand': disposal.item?.brand?.name || 'No Brand',
+        'Quantity': disposal.quantity,
+        'Disposal Value': disposal.disposalValue,
+        'Total Value': disposal.totalValue,
+        'Location': disposal.location?.name || 'No Location',
+        'Reason': disposal.reason || 'No reason provided',
+        'Disposed By': `${disposal.user?.firstName || ''} ${disposal.user?.lastName || ''}`.trim(),
+        'Disposal Date': disposal.disposalDate ? new Date(disposal.disposalDate).toLocaleDateString() : '',
+        'Item ID': disposal.itemId,
+        'Remarks': disposal.remarks || ''
+      }));
+
+      // Create workbook and worksheet
+      const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(exportData);
+      const wb: XLSX.WorkBook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Disposal Records');
+
+      // Auto-size columns
+      const colWidths = [
+        { wch: 25 }, // Item Name
+        { wch: 15 }, // Category
+        { wch: 15 }, // Brand
+        { wch: 10 }, // Quantity
+        { wch: 15 }, // Disposal Value
+        { wch: 15 }, // Total Value
+        { wch: 20 }, // Location
+        { wch: 40 }, // Reason
+        { wch: 20 }, // Disposed By
+        { wch: 15 }, // Disposal Date
+        { wch: 10 }, // Item ID
+        { wch: 30 }  // Remarks
+      ];
+      ws['!cols'] = colWidths;
+
+      // Generate filename with current date
+      const date = new Date().toISOString().split('T')[0];
+      const filename = `Disposal_Records_${date}.xlsx`;
+
+      // Save file
+      XLSX.writeFile(wb, filename);
+      
+      this.alertService.success('Disposal records exported to Excel successfully!');
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+      this.alertService.error('Failed to export disposal records to Excel');
     }
   }
 } 

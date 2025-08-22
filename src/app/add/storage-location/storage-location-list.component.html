@@ -150,7 +150,7 @@
                                 </td>
                                 <td>
                                     <span class="date-badge">
-                                        {{ loc.createdAt | date: 'MMM dd, yyyy' }}
+                                        {{ (loc.createdAt || loc.updatedAt) | date: 'MMM dd, yyyy' || 'N/A' }}
                                     </span>
                                 </td>
                                 <td>

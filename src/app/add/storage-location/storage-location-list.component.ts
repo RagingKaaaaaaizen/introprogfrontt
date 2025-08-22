@@ -458,7 +458,11 @@ export class StorageLocationListComponent implements OnInit {
         filtered.sort((a, b) => this.getLocationItemCount(b.id) - this.getLocationItemCount(a.id));
         break;
       case 'created':
-        filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        filtered.sort((a, b) => {
+          const dateA = new Date(a.createdAt || a.updatedAt || 0).getTime();
+          const dateB = new Date(b.createdAt || b.updatedAt || 0).getTime();
+          return dateB - dateA;
+        });
         break;
     }
 
@@ -528,7 +532,7 @@ export class StorageLocationListComponent implements OnInit {
   }
 
   deleteLocation(id: number) {
-    if (confirm('Are you sure you want to delete this storage location?')) {
+    if (confirm('Are you sure you want to delete this storage location? This will also delete all related stock and disposal records.')) {
       this.storageLocationService.delete(id)
         .pipe(first())
         .subscribe({
@@ -537,7 +541,11 @@ export class StorageLocationListComponent implements OnInit {
             this.loadLocations();
           },
           error: (error) => {
-            this.alertService.error('Error deleting storage location');
+            if (error.status === 400) {
+              this.alertService.error('Cannot delete location: It has related records. Please remove all items and disposal records first.');
+            } else {
+              this.alertService.error('Error deleting storage location: ' + (error.error?.message || error.message || 'Unknown error'));
+            }
           }
         });
     }

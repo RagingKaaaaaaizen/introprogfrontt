@@ -103,6 +103,10 @@
             <div class="card-header">
                 <h5><i class="fas fa-list"></i> Stock Entries</h5>
                 <div class="table-actions">
+                    <button class="btn btn-sm btn-outline-success me-2" (click)="exportToExcel()">
+                        <i class="fas fa-file-excel"></i>
+                        Export to Excel
+                    </button>
                     <button class="btn btn-sm btn-outline-secondary" (click)="refreshData()">
                         <i class="fas fa-sync-alt"></i>
                         Refresh

@@ -26,19 +26,19 @@
                             <i class="fas fa-boxes"></i>
                         </div>
                         <div class="stat-content">
-                            <h3>Inventory</h3>
-                            <p class="stat-number">Manage Stock</p>
+                            <h3>{{analyticsData?.totalItems || 0}}</h3>
+                            <p class="stat-number">Total Items</p>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3 col-sm-6">
                     <div class="stat-card">
                         <div class="stat-icon">
-                            <i class="fas fa-trash-alt"></i>
+                            <i class="fas fa-cubes"></i>
                         </div>
                         <div class="stat-content">
-                            <h3>Disposals</h3>
-                            <p class="stat-number">Track Disposals</p>
+                            <h3>{{analyticsData?.totalStock || 0}}</h3>
+                            <p class="stat-number">Total Stock</p>
                         </div>
                     </div>
                 </div>
@@ -48,8 +48,8 @@
                             <i class="fas fa-desktop"></i>
                         </div>
                         <div class="stat-content">
-                            <h3>PC Management</h3>
-                            <p class="stat-number">Manage PCs</p>
+                            <h3>{{analyticsData?.totalPCs || 0}}</h3>
+                            <p class="stat-number">Total PCs</p>
                         </div>
                     </div>
                 </div>
@@ -59,16 +59,424 @@
                             <i class="fas fa-users"></i>
                         </div>
                         <div class="stat-content">
-                            <h3>Users</h3>
-                            <p class="stat-number">Manage Accounts</p>
+                            <h3>{{analyticsData?.totalEmployees || 0}}</h3>
+                            <p class="stat-number">Total Employees</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Summary Metrics -->
+        <div class="summary-metrics-section" *ngIf="!loading && analyticsData">
+            <div class="row">
+                <div class="col-md-3 col-sm-6">
+                    <div class="metric-card">
+                        <div class="metric-icon warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h4>{{analyticsData.lowStockItems}}</h4>
+                            <p>Low Stock Items</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="metric-card">
+                        <div class="metric-icon danger">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h4>{{analyticsData.outOfStockItems}}</h4>
+                            <p>Out of Stock</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="metric-card">
+                        <div class="metric-icon info">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h4>{{analyticsData.totalDepartments}}</h4>
+                            <p>Departments</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="metric-card">
+                        <div class="metric-icon secondary">
+                            <i class="fas fa-trash-alt"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h4>{{analyticsData.totalDisposals}}</h4>
+                            <p>Total Disposals</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Section -->
+        <div class="analytics-section">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4><i class="fas fa-chart-bar"></i> Analytics Dashboard</h4>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="operational-period">
+                        <i class="fas fa-calendar-alt text-success me-2"></i>
+                        <span class="text-muted">Operational Period: <strong>{{getOperationalPeriod()}}</strong></span>
+                        <span class="text-muted ms-2">({{getTotalOperationalMonths()}} months)</span>
+                    </div>
+                    <div class="data-status">
+                        <i class="fas fa-database text-info me-2"></i>
+                        <span class="text-muted">{{getDataStatus()}}</span>
+                    </div>
+                    <div class="last-update">
+                        <i class="fas fa-clock text-warning me-2"></i>
+                        <span class="text-muted">Last Update: <strong>{{getLastUpdateTime()}}</strong></span>
+                    </div>
+                    <div class="analytics-date">
+                        <i class="fas fa-calendar-alt text-primary me-2"></i>
+                        <span class="text-muted">{{getCurrentDate()}}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export Reports Section -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-download text-primary me-2"></i> Export Reports</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary mb-3">
+                                <i class="fas fa-file-excel text-success me-2"></i>Stock List Export (Excel)
+                            </h6>
+                            <button 
+                                class="btn btn-success btn-sm me-2" 
+                                (click)="downloadStockList()"
+                                [disabled]="downloading">
+                                <i [class]="downloading ? 'fas fa-spinner fa-spin' : 'fas fa-file-excel'" class="me-1"></i>
+                                {{ downloading ? 'Downloading...' : 'Download Stock List' }}
+                            </button>
+                            <small class="text-muted d-block mt-1">
+                                Exports complete stock inventory with item details, quantities, and status in Excel format
+                            </small>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-primary mb-3">
+                                <i class="fas fa-file-word text-primary me-2"></i>Time-Based Reports (Word)
+                            </h6>
+                            <div class="btn-group-vertical d-block">
+                                <button 
+                                    class="btn btn-outline-primary btn-sm mb-1" 
+                                    (click)="downloadWeeklyReport()"
+                                    [disabled]="downloading">
+                                    <i [class]="downloading ? 'fas fa-spinner fa-spin' : 'fas fa-file-word'" class="me-1"></i>
+                                    {{ downloading ? 'Downloading...' : 'Weekly Report' }}
+                                </button>
+                                <button 
+                                    class="btn btn-outline-primary btn-sm mb-1" 
+                                    (click)="downloadMonthlyReport()"
+                                    [disabled]="downloading">
+                                    <i [class]="downloading ? 'fas fa-spinner fa-spin' : 'fas fa-file-word'" class="me-1"></i>
+                                    {{ downloading ? 'Downloading...' : 'Monthly Report' }}
+                                </button>
+                                <button 
+                                    class="btn btn-outline-primary btn-sm" 
+                                    (click)="downloadYearlyReport()"
+                                    [disabled]="downloading">
+                                    <i [class]="downloading ? 'fas fa-spinner fa-spin' : 'fas fa-file-word'" class="me-1"></i>
+                                    {{ downloading ? 'Downloading...' : 'Yearly Report' }}
+                                </button>
+                            </div>
+                            <small class="text-muted d-block mt-1">
+                                Exports detailed stock additions reports in MS Word format
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="analytics-grid">
+                <!-- Charts Area -->
+                <div class="analytics-card">
+                    <h5><i class="fas fa-chart-line text-primary me-2"></i> Stock Analytics - Monthly Overview</h5>
+                    
+                    <!-- Stock Summary -->
+                    <div class="stock-summary">
+                        <div class="row text-center">
+                            <div class="col-3">
+                                <div class="summary-stat">
+                                    <div class="summary-number">{{getTotalStock()}}</div>
+                                    <div class="summary-label">Total Stock Units</div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="summary-stat">
+                                    <div class="summary-number">{{getTotalTimelineAdditions()}}</div>
+                                    <div class="summary-label">Total Additions</div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="summary-stat">
+                                    <div class="summary-number">{{getTotalOperationalMonths()}}</div>
+                                    <div class="summary-label">Months of Operation</div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="summary-stat">
+                                    <div class="summary-number">{{getAverageDailyAdditions()}}</div>
+                                    <div class="summary-label">Avg Additions/Day</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stock Analytics Chart -->
+                    <div class="chart-container chart-background">
+                        <div class="stock-chart">
+                            <!-- Chart Header with Time Selectors -->
+                            <div class="chart-header">
+                                <div class="chart-title-section">
+                                    <h4 class="stock-ticker">STOCK</h4>
+                                    <p class="stock-name">Inventory Stock Analytics</p>
+                                </div>
+                                <div class="time-selector">
+                                    <button 
+                                        *ngFor="let period of timePeriods" 
+                                        [class.active]="selectedTimePeriod === period.value"
+                                        (click)="selectTimePeriod(period.value)"
+                                        class="time-btn">
+                                        {{ period.label }}
+                                    </button>
+                                    <button 
+                                        (click)="refreshData()"
+                                        class="time-btn refresh-btn"
+                                        title="Refresh Data">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Chart Area -->
+                            <div class="chart-area">
+                                <div class="chart-main">
+                                    <canvas baseChart
+                                        #stockChart
+                                        [data]="stockChartData"
+                                        [options]="stockChartOptions"
+                                        [type]="'line'"
+                                        class="chart-canvas">
+                                    </canvas>
+                                </div>
+                            </div>
+
+                            <!-- Chart Legend -->
+                            <div class="chart-legend">
+                                <div class="legend-item">
+                                    <div class="legend-line"></div>
+                                    <span>Stock Levels</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-placeholder" *ngIf="categoryDistribution.length === 0">
+                            <i class="fas fa-chart-line"></i>
+                            <p>No stock data available</p>
+                        </div>
+                    </div>
+
+                    <!-- Disposal Analytics Section -->
+                    <div class="analytics-card mt-4 disposal-analytics">
+                        <h5><i class="fas fa-trash-alt text-danger me-2"></i> Stock Disposal Analytics - Monthly Overview</h5>
+                        
+                        <!-- Disposal Summary -->
+                        <div class="stock-summary">
+                            <div class="row text-center">
+                                <div class="col-3">
+                                    <div class="summary-stat">
+                                        <div class="summary-number">{{getTotalDisposalCount()}}</div>
+                                        <div class="summary-label">Total Items Disposed</div>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="summary-stat">
+                                        <div class="summary-number">{{getAverageDailyDisposals()}}</div>
+                                        <div class="summary-label">Avg Disposals/Day</div>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="summary-stat">
+                                        <div class="summary-number">{{disposalTimelineData.length}}</div>
+                                        <div class="summary-label">Active Disposal Days</div>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="summary-stat">
+                                        <div class="summary-number">{{getMostActiveDisposalDay()}}</div>
+                                        <div class="summary-label">Peak Disposal Day</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Disposal Chart -->
+                        <div class="chart-container chart-background">
+                            <div class="disposal-chart">
+                                <div class="chart-header">
+                                    <div class="chart-title-section">
+                                        <h4 class="disposal-ticker">DISPOSALS</h4>
+                                        <p class="disposal-name">Disposal Analytics Over Time</p>
+                                    </div>
+                                    <div class="time-selector">
+                                        <button 
+                                            *ngFor="let period of timePeriods" 
+                                            [class.active]="selectedTimePeriod === period.value"
+                                            (click)="selectTimePeriod(period.value)"
+                                            class="time-btn">
+                                            {{ period.label }}
+                                        </button>
+                                        <button 
+                                            (click)="refreshData()"
+                                            class="time-btn refresh-btn"
+                                            title="Refresh Data">
+                                            <i class="fas fa-sync-alt"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="chart-area">
+                                    <div class="chart-main">
+                                        <canvas baseChart
+                                            #disposalChart
+                                            [data]="disposalChartData"
+                                            [options]="disposalChartOptions"
+                                            [type]="'line'"
+                                            class="chart-canvas">
+                                        </canvas>
+                                    </div>
+                                </div>
+
+                                <!-- Chart Legend -->
+                                <div class="chart-legend">
+                                    <div class="legend-item">
+                                        <div class="legend-line"></div>
+                                        <span>Disposal Trends</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Timeline Summary -->
+                    <div class="timeline-summary mb-3" *ngIf="stockTimelineData.length > 0">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="summary-stat">
+                                    <div class="summary-number">{{getTotalTimelineAdditions()}}</div>
+                                    <div class="summary-label">Total Items Added</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="summary-stat">
+                                    <div class="summary-number">{{getAverageDailyAdditions()}}</div>
+                                    <div class="summary-label">Avg Items/Day</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="summary-stat">
+                                    <div class="summary-number">{{stockTimelineData.length}}</div>
+                                    <div class="summary-label">Active Days</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Category Information with Dates -->
+                    <div class="category-info-section" *ngIf="categoryDistribution.length > 0">
+                        <div class="current-stock-summary mb-3">
+                            <h6 class="text-muted mb-2">
+                                <i class="fas fa-info-circle"></i> Current Stock Distribution 
+                                <span class="text-muted ms-2">(as of {{getCurrentDate()}})</span>
+                            </h6>
+                            <div class="category-list">
+                                <div class="category-item" *ngFor="let category of categoryDistribution.slice(0, 5)">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span>{{category.name}}</span>
+                                        <span class="badge badge-primary">{{category.count}} units</span>
+                                    </div>
+                                    <div class="progress mt-2" style="height: 6px;">
+                                        <div class="progress-bar" role="progressbar" 
+                                             [style.width.%]="category.percentage" 
+                                             [attr.aria-valuenow]="category.percentage" 
+                                             aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity with Accurate Dates -->
+                <div class="analytics-card">
+                    <h5><i class="fas fa-clock"></i> Recent Activity</h5>
+                    <div class="text-muted mb-3">
+                        <small><i class="fas fa-info-circle"></i> Real-time system usage tracking</small>
+                    </div>
+                    <div class="activity-list" *ngIf="analyticsData?.recentActivity?.length">
+                        <div class="activity-item" *ngFor="let activity of analyticsData.recentActivity" 
+                             [class.highlight-august15]="activity.isSpecialDate">
+                            <div class="activity-icon" [class.special-icon]="activity.isSpecialDate">
+                                <i [class]="activity.icon"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-message">
+                                    {{activity.message}}
+                                    <span class="badge badge-warning ms-2" *ngIf="activity.isSpecialDate">
+                                        <i class="fas fa-star"></i> Aug 15, 2025
+                                    </span>
+                                </div>
+                                <div class="activity-time">
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    {{activity.timestamp | date:'medium'}}
+                                    <span class="text-success ms-2" *ngIf="activity.isSpecialDate">
+                                        <i class="fas fa-check-circle"></i> Verified Date
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center text-muted p-3" *ngIf="!analyticsData?.recentActivity?.length">
+                        <i class="fas fa-info-circle fs-4 mb-2"></i>
+                        <p class="mb-0">No recent activity available</p>
+                        <small>Stock additions and system usage will appear here</small>
+                    </div>
+                    
+                    <!-- Real-time Update Indicator -->
+                    <div class="mt-3 pt-3 border-top">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="fas fa-sync-alt"></i> Auto-refresh: Every 30 seconds
+                            </small>
+                            <small class="text-muted">
+                                Last update: {{getLastUpdateTime()}}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div class="loading" *ngIf="loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Loading analytics data...</p>
+        </div>
+
         <!-- Permissions Section -->
-        <div class="permissions-section">
+        <div class="permissions-section" *ngIf="!loading">
             <div class="card">
                 <div class="card-header">
                     <h5><i class="fas fa-key"></i> Your Permissions</h5>
@@ -101,7 +509,7 @@
         </div>
 
         <!-- Quick Actions -->
-        <div class="quick-actions-section">
+        <div class="quick-actions-section" *ngIf="!loading">
             <div class="card">
                 <div class="card-header">
                     <h5><i class="fas fa-bolt"></i> Quick Actions</h5>
@@ -132,6 +540,10 @@
                             <i class="fas fa-user"></i>
                             <span>My Profile</span>
                         </a>
+                        <div class="action-item" (click)="downloadStockList()" *ngIf="hasRole([Role.SuperAdmin, Role.Admin, Role.Viewer])" style="cursor: pointer;">
+                            <i class="fas fa-file-excel text-success"></i>
+                            <span>Export Stock List</span>
+                        </div>
                     </div>
                 </div>
             </div>

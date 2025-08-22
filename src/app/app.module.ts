@@ -3,6 +3,9 @@ import { BrowserModule } from '@angular/platform-browser';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 
+// Chart.js imports
+import { NgChartsModule } from 'ng2-charts';
+
 // used to create fake backend
 // import { fakeBackendProvider } from './_helpers/fake-backend';
 
@@ -10,7 +13,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { JwtInterceptor, ErrorInterceptor, appInitializer } from './_helpers';
 import { AccountService } from './_services';
 import { AppComponent } from './app.component';
-import { AlertComponent, NavComponent, ProfessionalTableComponent } from './_components';
+import { AlertComponent, NavComponent, ProfessionalTableComponent, SimpleChartComponent } from './_components';
 import { HomeComponent } from './home';
 
 @NgModule({
@@ -19,13 +22,15 @@ import { HomeComponent } from './home';
         ReactiveFormsModule,
         FormsModule,
         HttpClientModule,
-        AppRoutingModule
+        AppRoutingModule,
+        NgChartsModule
     ],
     declarations: [
         AppComponent,
         AlertComponent,
         NavComponent,
         ProfessionalTableComponent,
+        SimpleChartComponent,
         HomeComponent       
     ],
     providers: [

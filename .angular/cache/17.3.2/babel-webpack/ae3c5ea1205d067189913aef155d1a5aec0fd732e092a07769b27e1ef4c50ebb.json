@@ -1,0 +1,1 @@
+{"ast":null,"code":"export var Role = /*#__PURE__*/function (Role) {\n  Role[\"SuperAdmin\"] = \"SuperAdmin\";\n  Role[\"Admin\"] = \"Admin\";\n  Role[\"Viewer\"] = \"Viewer\";\n  return Role;\n}(Role || {});","map":null,"metadata":{},"sourceType":"module","externalDependencies":[]}
