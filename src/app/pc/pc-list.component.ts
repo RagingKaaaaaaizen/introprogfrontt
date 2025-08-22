@@ -706,6 +706,14 @@ export class PCListComponent implements OnInit {
     return locationIds.length;
   }
 
+  getTotalPCValue(): number {
+    return this.pcs.reduce((total, pc) => {
+      const pcComponents = this.pcComponents.filter(c => c.pcId === pc.id);
+      const pcValue = pcComponents.reduce((sum, comp) => sum + (comp.totalPrice || 0), 0);
+      return total + pcValue;
+    }, 0);
+  }
+
   getLocationName(locationId: number): string {
     const location = this.locations.find(l => l.id === locationId);
     return location ? location.name : 'Unknown Location';
@@ -720,7 +728,7 @@ export class PCListComponent implements OnInit {
   }
 
   viewPC(id: number) {
-    this.router.navigate(['/pc', id]);
+    this.router.navigate(['/pc/detail', id]);
   }
 
   viewComponents(id: number) {

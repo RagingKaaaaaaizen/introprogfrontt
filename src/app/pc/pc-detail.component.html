@@ -1,0 +1,292 @@
+<div class="detail-container">
+    <div class="container">
+        <!-- Loading State -->
+        <div class="loading" *ngIf="loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            <h4>Loading PC Details...</h4>
+            <p>Please wait while we fetch the information</p>
+        </div>
+
+        <!-- Error State -->
+        <div class="error-state" *ngIf="error && !loading">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h4>Error Loading PC Details</h4>
+            <p>Unable to load the PC information. Please try again.</p>
+            <button class="btn btn-primary" (click)="goBack()">
+                <i class="fas fa-arrow-left"></i>
+                Go Back
+            </button>
+        </div>
+
+        <!-- PC Details Content -->
+        <div *ngIf="!loading && !error && pc">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="header-content">
+                    <div class="header-title">
+                        <i class="fas fa-desktop"></i>
+                        <div>
+                            <h1 class="page-title">{{ pc.name }}</h1>
+                            <p class="page-subtitle">PC System Details & Components</p>
+                        </div>
+                    </div>
+                    <div class="header-actions">
+                        <button type="button" class="btn btn-secondary" (click)="goBack()">
+                            <i class="fas fa-arrow-left"></i>
+                            Back to List
+                        </button>
+                        <button type="button" class="btn btn-info" (click)="viewComponents()">
+                            <i class="fas fa-microchip"></i>
+                            Manage Components
+                        </button>
+                        <button type="button" class="btn btn-warning" (click)="editPC()" *ngIf="hasRole([Role.SuperAdmin, Role.Admin])">
+                            <i class="fas fa-edit"></i>
+                            Edit PC
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PC Information Grid -->
+            <div class="info-grid">
+                <!-- Basic Information -->
+                <div class="info-card">
+                    <div class="card-header">
+                        <i class="fas fa-info-circle"></i>
+                        <h3 class="card-title">Basic Information</h3>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">PC Name</span>
+                        <span class="info-value">{{ pc.name }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Serial Number</span>
+                        <span class="info-value">{{ pc.serialNumber || 'Not Available' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Location</span>
+                        <span class="info-value">{{ getLocationName(pc.roomLocationId) }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Assigned To</span>
+                        <span class="info-value">{{ pc.assignedTo || 'Unassigned' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Status</span>
+                        <span class="status-badge" [ngClass]="{
+                            'badge-success': pc.status === 'Active',
+                            'badge-warning': pc.status === 'Maintenance',
+                            'badge-secondary': pc.status === 'Inactive',
+                            'badge-danger': pc.status === 'Retired'
+                        }">
+                            <i class="fas fa-circle"></i> {{ pc.status }}
+                        </span>
+                    </div>
+                    <div class="info-item" *ngIf="pc.notes">
+                        <span class="info-label">Notes</span>
+                        <span class="info-value">{{ pc.notes }}</span>
+                    </div>
+                </div>
+
+                <!-- System Details -->
+                <div class="info-card">
+                    <div class="card-header">
+                        <i class="fas fa-cogs"></i>
+                        <h3 class="card-title">System Details</h3>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Created Date</span>
+                        <span class="info-value">{{ pc.createdAt | date:'medium' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Last Updated</span>
+                        <span class="info-value">{{ pc.updatedAt | date:'medium' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Total Components</span>
+                        <span class="info-value">{{ pcComponents.length }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Working Components</span>
+                        <span class="info-value">{{ getWorkingComponentsCount() }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Total Value</span>
+                        <span class="info-value price-value">₱{{ getTotalComponentValue() | number:'1.2-2' }}</span>
+                    </div>
+                </div>
+
+                <!-- Component Status Summary -->
+                <div class="info-card">
+                    <div class="card-header">
+                        <i class="fas fa-chart-pie"></i>
+                        <h3 class="card-title">Component Status</h3>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Working</span>
+                        <span class="status-badge badge-success">{{ getComponentStatusCount('Working') }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Maintenance</span>
+                        <span class="status-badge badge-warning">{{ getComponentStatusCount('Maintenance') }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Not Working</span>
+                        <span class="status-badge badge-danger">{{ getComponentStatusCount('Not Working') }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Missing</span>
+                        <span class="status-badge badge-secondary">{{ getComponentStatusCount('Missing') }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Components Section -->
+            <div class="components-section">
+                <div class="components-header">
+                    <h2 class="components-title">
+                        <i class="fas fa-microchip"></i>
+                        PC Components & Stock Information
+                    </h2>
+                </div>
+
+                <!-- Components Summary -->
+                <div class="components-summary">
+                    <div class="summary-item">
+                        <div class="summary-number">{{ pcComponents.length }}</div>
+                        <div class="summary-label">Total Components</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-number">{{ getTotalComponentQuantity() }}</div>
+                        <div class="summary-label">Total Quantity</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-number">₱{{ getTotalComponentValue() | number:'1.2-2' }}</div>
+                        <div class="summary-label">Total Value</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-number">{{ getWorkingComponentsCount() }}</div>
+                        <div class="summary-label">Working</div>
+                    </div>
+                </div>
+
+                <!-- Components Table -->
+                <div class="table-responsive" *ngIf="pcComponents.length > 0">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-microchip"></i> Component</th>
+                                <th><i class="fas fa-box"></i> Stock Item</th>
+                                <th><i class="fas fa-hashtag"></i> Quantity</th>
+                                <th><i class="fas fa-dollar-sign"></i> Unit Price</th>
+                                <th><i class="fas fa-calculator"></i> Total Price</th>
+                                <th><i class="fas fa-warehouse"></i> Stock Status</th>
+                                <th><i class="fas fa-info-circle"></i> Component Status</th>
+                                <th><i class="fas fa-comment"></i> Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let component of pcComponents">
+                                <!-- Component Name -->
+                                <td>
+                                    <strong>{{ getItemDetails(component.itemId).name || 'Unknown Item' }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ getItemDetails(component.itemId).description || 'No description' }}</small>
+                                </td>
+
+                                <!-- Stock Item Details -->
+                                <td>
+                                    <div class="stock-info">
+                                        <span class="stock-quantity">
+                                            {{ getStockDetails(component.stockId).quantity || 0 }} in stock
+                                        </span>
+                                        <span class="stock-status" [ngClass]="getStockStatus(component.stockId).class">
+                                            {{ getStockStatus(component.stockId).status }}
+                                        </span>
+                                    </div>
+                                </td>
+
+                                <!-- Quantity -->
+                                <td>
+                                    <strong>{{ component.quantity }}</strong>
+                                </td>
+
+                                <!-- Unit Price -->
+                                <td>
+                                    <div class="price-info">
+                                        <div class="price-value">₱{{ component.price | number:'1.2-2' }}</div>
+                                        <div class="price-label">per unit</div>
+                                    </div>
+                                </td>
+
+                                <!-- Total Price -->
+                                <td>
+                                    <div class="price-info">
+                                        <div class="price-value">₱{{ component.totalPrice | number:'1.2-2' }}</div>
+                                        <div class="price-label">total</div>
+                                    </div>
+                                </td>
+
+                                <!-- Stock Status -->
+                                <td>
+                                    <span class="stock-status" [ngClass]="getStockStatus(component.stockId).class">
+                                        {{ getStockStatus(component.stockId).status }}
+                                    </span>
+                                </td>
+
+                                <!-- Component Status -->
+                                <td>
+                                    <span class="status-badge" [ngClass]="{
+                                        'badge-success': component.status === 'Working',
+                                        'badge-warning': component.status === 'Maintenance',
+                                        'badge-danger': component.status === 'Not Working',
+                                        'badge-secondary': component.status === 'Missing'
+                                    }">
+                                        <i class="fas fa-circle"></i> {{ component.status }}
+                                    </span>
+                                </td>
+
+                                <!-- Remarks -->
+                                <td>
+                                    <span *ngIf="component.remarks">{{ component.remarks }}</span>
+                                    <span *ngIf="!component.remarks" class="text-muted">No remarks</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- No Components Message -->
+                <div *ngIf="pcComponents.length === 0" class="text-center py-5">
+                    <i class="fas fa-microchip fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No Components Found</h4>
+                    <p class="text-muted">This PC doesn't have any components assigned yet.</p>
+                    <button type="button" class="btn btn-primary" (click)="viewComponents()">
+                        <i class="fas fa-plus"></i>
+                        Add Components
+                    </button>
+                </div>
+
+                <!-- Total Summary -->
+                <div class="total-section" *ngIf="pcComponents.length > 0">
+                    <div class="total-row">
+                        <span>Total Components:</span>
+                        <span>{{ pcComponents.length }}</span>
+                    </div>
+                    <div class="total-row">
+                        <span>Total Quantity:</span>
+                        <span>{{ getTotalComponentQuantity() }}</span>
+                    </div>
+                    <div class="total-row">
+                        <span>Working Components:</span>
+                        <span>{{ getWorkingComponentsCount() }}</span>
+                    </div>
+                    <div class="total-row">
+                        <span>Total System Value:</span>
+                        <span>₱{{ getTotalComponentValue() | number:'1.2-2' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

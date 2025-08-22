@@ -5,6 +5,7 @@ import { PCRoutingModule } from './pc-routing.module';
 import { PCListComponent } from './pc-list.component';
 import { PCAddEditComponent } from './pc-add-edit.component';
 import { PCComponentsComponent } from './pc-components.component';
+import { PCDetailComponent } from './pc-detail.component';
 
 @NgModule({
     imports: [
@@ -16,7 +17,8 @@ import { PCComponentsComponent } from './pc-components.component';
     declarations: [
         PCListComponent,
         PCAddEditComponent,
-        PCComponentsComponent
+        PCComponentsComponent,
+        PCDetailComponent
     ]
 })
 export class PCModule { } 

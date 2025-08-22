@@ -15,6 +15,10 @@
                         <i class="fas fa-plus"></i>
                         Add PC
                     </a>
+                    <button type="button" class="btn btn-info" (click)="refreshData()">
+                        <i class="fas fa-sync-alt"></i>
+                        Refresh Data
+                    </button>
                     <button type="button" class="btn btn-secondary ml-2" (click)="testNavigation()">
                         <i class="fas fa-test"></i>
                         Test Navigation
@@ -59,6 +63,13 @@
                 </div>
                 <div class="stat-number">{{ getUniqueLocations() }}</div>
                 <div class="stat-label">Locations</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="stat-number">₱{{ getTotalPCValue() | number:'1.0-0' }}</div>
+                <div class="stat-label">Total Value</div>
             </div>
         </div>
 
@@ -182,7 +193,7 @@
                                  <td data-label="Actions">
                                      <div class="action-buttons">
                                          <button type="button" class="btn btn-sm btn-outline-primary"
-                                                 (click)="viewPC(pc.id)" title="View Details">
+                                                 (click)="viewPC(pc.id)" title="View PC Details with Components & Stock Info">
                                              <i class="fas fa-eye"></i>
                                          </button>
                                          <button type="button" class="btn btn-sm btn-outline-info"
