@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { first } from 'rxjs/operators';
 
-import { AccountService, AlertService, PCService, PCComponentService, RoomLocationService } from '@app/_services';
+import { AccountService, AlertService, PCService, PCComponentService, RoomLocationService, AnalyticsService } from '@app/_services';
 import { Role } from '@app/_models';
 
 @Component({
@@ -559,6 +559,67 @@ import { Role } from '@app/_models';
         max-width: 1400px;
       }
     }
+
+    /* PC Export Section Styles */
+    .btn-group-vertical .btn {
+      text-align: left;
+      border-radius: 8px !important;
+      margin-bottom: 8px;
+      transition: all 0.3s ease;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .btn-group-vertical .btn:hover {
+      transform: translateX(5px);
+      box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+    }
+
+    .btn-group-vertical .btn:last-child {
+      margin-bottom: 0;
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+      border: none;
+      box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .btn-success:hover {
+      background: linear-gradient(135deg, #218838 0%, #1ea085 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4);
+    }
+
+    .btn-outline-primary {
+      border: 2px solid #007bff;
+      color: #007bff;
+      background: transparent;
+      transition: all 0.3s ease;
+    }
+
+    .btn-outline-primary:hover {
+      background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+      border-color: #007bff;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 123, 255, 0.4);
+    }
+
+    .card-header h5 {
+      color: #1a1a1a;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .card-header h5 i {
+      color: #007bff;
+    }
+
+    .fa-file-word {
+      color: #2b579a;
+    }
   `]
 })
 export class PCListComponent implements OnInit {
@@ -580,7 +641,8 @@ export class PCListComponent implements OnInit {
     private pcComponentService: PCComponentService,
     private locationService: RoomLocationService,
     private alertService: AlertService,
-    public accountService: AccountService
+    public accountService: AccountService,
+    private analyticsService: AnalyticsService
   ) { }
 
   ngOnInit() {
@@ -706,14 +768,6 @@ export class PCListComponent implements OnInit {
     return locationIds.length;
   }
 
-  getTotalPCValue(): number {
-    return this.pcs.reduce((total, pc) => {
-      const pcComponents = this.pcComponents.filter(c => c.pcId === pc.id);
-      const pcValue = pcComponents.reduce((sum, comp) => sum + (comp.totalPrice || 0), 0);
-      return total + pcValue;
-    }, 0);
-  }
-
   getLocationName(locationId: number): string {
     const location = this.locations.find(l => l.id === locationId);
     return location ? location.name : 'Unknown Location';
@@ -728,7 +782,7 @@ export class PCListComponent implements OnInit {
   }
 
   viewPC(id: number) {
-    this.router.navigate(['/pc/detail', id]);
+    this.router.navigate(['/pc', id]);
   }
 
   viewComponents(id: number) {
@@ -881,6 +935,55 @@ export class PCListComponent implements OnInit {
   private handleComponentStatusChange(event: CustomEvent) {
     console.log('Component status change detected, refreshing PC components...');
     this.loadPCComponents(); // This will trigger autoUpdatePCStatus
+  }
+
+  // PC Export Methods
+  downloadPCList() {
+    this.analyticsService.downloadPCListExcel().subscribe({
+      next: () => {
+        this.alertService.success('PC list downloaded successfully!', { autoClose: true });
+      },
+      error: (error) => {
+        this.alertService.error('Error downloading PC list. Please try again.', { autoClose: true });
+        console.error('Error downloading PC list:', error);
+      }
+    });
+  }
+
+  downloadWeeklyPCAnalysis() {
+    this.analyticsService.downloadWeeklyPCAnalysis().subscribe({
+      next: () => {
+        this.alertService.success('Weekly PC analysis (Word) downloaded successfully!', { autoClose: true });
+      },
+      error: (error) => {
+        this.alertService.error('Error downloading weekly PC analysis. Please try again.', { autoClose: true });
+        console.error('Error downloading weekly PC analysis:', error);
+      }
+    });
+  }
+
+  downloadMonthlyPCAnalysis() {
+    this.analyticsService.downloadMonthlyPCAnalysis().subscribe({
+      next: () => {
+        this.alertService.success('Monthly PC analysis (Word) downloaded successfully!', { autoClose: true });
+      },
+      error: (error) => {
+        this.alertService.error('Error downloading monthly PC analysis. Please try again.', { autoClose: true });
+        console.error('Error downloading monthly PC analysis:', error);
+      }
+    });
+  }
+
+  downloadYearlyPCAnalysis() {
+    this.analyticsService.downloadYearlyPCAnalysis().subscribe({
+      next: () => {
+        this.alertService.success('Yearly PC analysis (Word) downloaded successfully!', { autoClose: true });
+      },
+      error: (error) => {
+        this.alertService.error('Error downloading yearly PC analysis. Please try again.', { autoClose: true });
+        console.error('Error downloading yearly PC analysis:', error);
+      }
+    });
   }
 
   ngOnDestroy() {

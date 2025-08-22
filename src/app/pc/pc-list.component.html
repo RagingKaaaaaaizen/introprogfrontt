@@ -15,10 +15,6 @@
                         <i class="fas fa-plus"></i>
                         Add PC
                     </a>
-                    <button type="button" class="btn btn-info" (click)="refreshData()">
-                        <i class="fas fa-sync-alt"></i>
-                        Refresh Data
-                    </button>
                     <button type="button" class="btn btn-secondary ml-2" (click)="testNavigation()">
                         <i class="fas fa-test"></i>
                         Test Navigation
@@ -64,12 +60,58 @@
                 <div class="stat-number">{{ getUniqueLocations() }}</div>
                 <div class="stat-label">Locations</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-dollar-sign"></i>
+        </div>
+
+        <!-- PC Export Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="fas fa-download text-primary me-2"></i> Export PC Reports</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary mb-3">
+                            <i class="fas fa-file-excel text-success me-2"></i>PC List Export (Excel)
+                        </h6>
+                        <button 
+                            class="btn btn-success btn-sm me-2" 
+                            (click)="downloadPCList()">
+                            <i class="fas fa-file-excel me-1"></i>
+                            Download PC List
+                        </button>
+                        <small class="text-muted d-block mt-1">
+                            Exports complete PC inventory with component details and status
+                        </small>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-primary mb-3">
+                            <i class="fas fa-file-word text-primary me-2"></i>PC Analysis Reports (Word)
+                        </h6>
+                        <div class="btn-group-vertical d-block">
+                            <button 
+                                class="btn btn-outline-primary btn-sm mb-1" 
+                                (click)="downloadWeeklyPCAnalysis()">
+                                <i class="fas fa-file-word me-1"></i>
+                                Weekly Analysis
+                            </button>
+                            <button 
+                                class="btn btn-outline-primary btn-sm mb-1" 
+                                (click)="downloadMonthlyPCAnalysis()">
+                                <i class="fas fa-file-word me-1"></i>
+                                Monthly Analysis
+                            </button>
+                            <button 
+                                class="btn btn-outline-primary btn-sm" 
+                                (click)="downloadYearlyPCAnalysis()">
+                                <i class="fas fa-file-word me-1"></i>
+                                Yearly Analysis
+                            </button>
+                        </div>
+                        <small class="text-muted d-block mt-1">
+                            Exports detailed PC analysis with maintenance information in Word format
+                        </small>
+                    </div>
                 </div>
-                <div class="stat-number">₱{{ getTotalPCValue() | number:'1.0-0' }}</div>
-                <div class="stat-label">Total Value</div>
             </div>
         </div>
 
@@ -193,7 +235,7 @@
                                  <td data-label="Actions">
                                      <div class="action-buttons">
                                          <button type="button" class="btn btn-sm btn-outline-primary"
-                                                 (click)="viewPC(pc.id)" title="View PC Details with Components & Stock Info">
+                                                 (click)="viewPC(pc.id)" title="View Details">
                                              <i class="fas fa-eye"></i>
                                          </button>
                                          <button type="button" class="btn btn-sm btn-outline-info"

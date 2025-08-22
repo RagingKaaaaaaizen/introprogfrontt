@@ -6,6 +6,7 @@ import { environment } from '@environments/environment';
 import { StockService } from './stock.service';
 import { ItemService } from './item.service';
 import { PCService } from './pc.service';
+import { PCComponentService } from './pc-component.service';
 import { EmployeeService } from './employee.service';
 import { DepartmentService } from './department.service';
 import { DisposeService } from './dispose.service';
@@ -49,6 +50,7 @@ export class AnalyticsService {
     private stockService: StockService,
     private itemService: ItemService,
     private pcService: PCService,
+    private pcComponentService: PCComponentService,
     private employeeService: EmployeeService,
     private departmentService: DepartmentService,
     private disposeService: DisposeService
@@ -435,6 +437,93 @@ export class AnalyticsService {
     );
   }
 
+  // PC Analysis Export Methods
+  downloadPCListExcel(): Observable<void> {
+    return forkJoin({
+      pcs: this.pcService.getAll().pipe(catchError(() => of([]))),
+      components: this.pcComponentService.getAll().pipe(catchError(() => of([])))
+    }).pipe(
+      map(data => {
+        const pcData = this.preparePCListForExcel(data.pcs, data.components);
+        this.exportToExcel(pcData, 'PC_List_' + this.getCurrentDateString());
+      })
+    );
+  }
+
+  downloadWeeklyPCAnalysis(): Observable<void> {
+    return this.getPCAnalysisData(7).pipe(
+      map(data => {
+        this.exportToWord(data, 'Weekly', 'Weekly_PC_Analysis_' + this.getCurrentDateString());
+      })
+    );
+  }
+
+  downloadMonthlyPCAnalysis(): Observable<void> {
+    return this.getPCAnalysisData(30).pipe(
+      map(data => {
+        this.exportToWord(data, 'Monthly', 'Monthly_PC_Analysis_' + this.getCurrentDateString());
+      })
+    );
+  }
+
+  downloadYearlyPCAnalysis(): Observable<void> {
+    return this.getPCAnalysisData(365).pipe(
+      map(data => {
+        this.exportToWord(data, 'Yearly', 'Yearly_PC_Analysis_' + this.getCurrentDateString());
+      })
+    );
+  }
+
+  private getPCAnalysisData(days: number): Observable<any[]> {
+    return forkJoin({
+      pcs: this.pcService.getAll().pipe(catchError(() => of([]))),
+      components: this.pcComponentService.getAll().pipe(catchError(() => of([])))
+    }).pipe(
+      map(data => this.processPCAnalysisData(data.pcs, data.components, days))
+    );
+  }
+
+  private processPCAnalysisData(pcs: any[], components: any[], days: number): any[] {
+    const today = new Date();
+    const startDate = new Date(today);
+    startDate.setDate(startDate.getDate() - days);
+
+    // Filter PCs created within the specified period
+    const recentPCs = pcs.filter(pc => {
+      if (!pc.createdAt) return false;
+      const pcDate = new Date(pc.createdAt);
+      return pcDate >= startDate && pcDate <= today;
+    });
+
+    // Group components by PC
+    const pcComponentsMap = new Map<number, any[]>();
+    components.forEach(component => {
+      if (!pcComponentsMap.has(component.pcId)) {
+        pcComponentsMap.set(component.pcId, []);
+      }
+      pcComponentsMap.get(component.pcId)!.push(component);
+    });
+
+    // Create analysis data
+    const analysisData = recentPCs.map(pc => {
+      const pcComponents = pcComponentsMap.get(pc.id) || [];
+      const maintenanceComponents = pcComponents.filter(comp => comp.status === 'Maintenance');
+      
+      return {
+        pc: pc,
+        components: pcComponents,
+        maintenanceComponents: maintenanceComponents,
+        totalComponents: pcComponents.length,
+        maintenanceCount: maintenanceComponents.length,
+        workingCount: pcComponents.filter(comp => comp.status === 'Working').length,
+        notWorkingCount: pcComponents.filter(comp => comp.status === 'Not Working').length,
+        missingCount: pcComponents.filter(comp => comp.status === 'Missing').length
+      };
+    });
+
+    return analysisData;
+  }
+
   private prepareStockListForExcel(stocks: any[], items: any[]): any[] {
     const excelData = [];
     
@@ -530,31 +619,71 @@ export class AnalyticsService {
     return excelData;
   }
 
-  private exportToExcel(data: any[], filename: string): void {
-    const ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet(data);
-    const wb: XLSX.WorkBook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Report');
+  private preparePCListForExcel(pcs: any[], components: any[]): any[] {
+    const excelData = [];
     
-    // Auto-size columns
-    const colWidths = data[0].map((col: string, index: number) => {
-      const maxLength = Math.max(...data.map(row => String(row[index] || '').length));
-      return { wch: Math.min(Math.max(maxLength + 2, 10), 50) };
-    });
-    ws['!cols'] = colWidths;
-    
-    // Save the file
-    XLSX.writeFile(wb, `${filename}.xlsx`);
-  }
+    // Add header row
+    excelData.push([
+      'PC ID',
+      'PC Name',
+      'Serial Number',
+      'Location',
+      'Status',
+      'Assigned To',
+      'Total Components',
+      'Working Components',
+      'Maintenance Components',
+      'Not Working Components',
+      'Missing Components',
+      'Created Date',
+      'Last Updated'
+    ]);
 
-  private exportToWord(data: any[], period: string, filename: string): void {
-    const htmlContent = this.createWordHTMLContent(data, period);
-    const blob = new Blob([htmlContent], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${filename}.docx`;
-    link.click();
-    window.URL.revokeObjectURL(url);
+    // Group components by PC
+    const pcComponentsMap = new Map<number, any[]>();
+    components.forEach(component => {
+      if (!pcComponentsMap.has(component.pcId)) {
+        pcComponentsMap.set(component.pcId, []);
+      }
+      pcComponentsMap.get(component.pcId)!.push(component);
+    });
+
+    // Add data rows
+    pcs.forEach(pc => {
+      const pcComponents = pcComponentsMap.get(pc.id) || [];
+      const workingCount = pcComponents.filter(comp => comp.status === 'Working').length;
+      const maintenanceCount = pcComponents.filter(comp => comp.status === 'Maintenance').length;
+      const notWorkingCount = pcComponents.filter(comp => comp.status === 'Not Working').length;
+      const missingCount = pcComponents.filter(comp => comp.status === 'Missing').length;
+      
+      excelData.push([
+        pc.id,
+        pc.name,
+        pc.serialNumber || 'N/A',
+        pc.roomLocation?.name || 'N/A',
+        pc.status,
+        pc.assignedTo || 'N/A',
+        pcComponents.length,
+        workingCount,
+        maintenanceCount,
+        notWorkingCount,
+        missingCount,
+        pc.createdAt ? new Date(pc.createdAt).toLocaleDateString() : 'N/A',
+        pc.updatedAt ? new Date(pc.updatedAt).toLocaleDateString() : 'N/A'
+      ]);
+    });
+
+    // Add summary section
+    excelData.push([]); // Empty row
+    excelData.push(['Summary Report', '', '', '', '', '', '', '', '', '', '', '', '']);
+    excelData.push(['Total PCs', pcs.length, '', '', '', '', '', '', '', '', '', '', '']);
+    excelData.push(['Active PCs', pcs.filter(pc => pc.status === 'Active').length, '', '', '', '', '', '', '', '', '', '', '']);
+    excelData.push(['Maintenance PCs', pcs.filter(pc => pc.status === 'Maintenance').length, '', '', '', '', '', '', '', '', '', '', '']);
+    excelData.push(['Inactive PCs', pcs.filter(pc => pc.status === 'Inactive').length, '', '', '', '', '', '', '', '', '', '', '']);
+    excelData.push(['Retired PCs', pcs.filter(pc => pc.status === 'Retired').length, '', '', '', '', '', '', '', '', '', '', '']);
+    excelData.push(['Report Generated', new Date().toLocaleString(), '', '', '', '', '', '', '', '', '', '', '']);
+
+    return excelData;
   }
 
   private createWordHTMLContent(data: any[], period: string): string {
@@ -635,6 +764,168 @@ export class AnalyticsService {
     `;
 
     return htmlContent;
+  }
+
+  private createPCAnalysisWordContent(data: any[], period: string): string {
+    const totalPCs = data.length;
+    const activePCs = data.filter(item => item.pc.status === 'Active').length;
+    const maintenancePCs = data.filter(item => item.pc.status === 'Maintenance').length;
+    const inactivePCs = data.filter(item => item.pc.status === 'Inactive').length;
+    const retiredPCs = data.filter(item => item.pc.status === 'Retired').length;
+
+    let pcTableRows = '';
+    let maintenanceTableRows = '';
+    
+    data.forEach(item => {
+      const pc = item.pc;
+      pcTableRows += `
+        <tr>
+          <td>${pc.name}</td>
+          <td>${pc.roomLocation?.name || 'N/A'}</td>
+          <td>${pc.status}</td>
+          <td>${item.totalComponents}</td>
+          <td>${item.workingCount}</td>
+          <td>${item.maintenanceCount}</td>
+          <td>${item.notWorkingCount}</td>
+          <td>${item.missingCount}</td>
+        </tr>
+      `;
+
+      // Add maintenance components details
+      if (item.maintenanceComponents.length > 0) {
+        item.maintenanceComponents.forEach(comp => {
+          maintenanceTableRows += `
+            <tr>
+              <td>${pc.name}</td>
+              <td>${comp.item?.name || 'N/A'}</td>
+              <td>${comp.status}</td>
+              <td>${comp.remarks || 'N/A'}</td>
+              <td>${comp.updatedAt ? new Date(comp.updatedAt).toLocaleDateString() : 'N/A'}</td>
+            </tr>
+          `;
+        });
+      }
+    });
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+      <head>
+        <meta charset='utf-8'>
+        <title>PC Analysis Report - ${period}</title>
+        <style>
+          body { font-family: 'Calibri', sans-serif; margin: 40px; }
+          h1 { color: #2b579a; text-align: center; font-size: 24px; margin-bottom: 30px; }
+          h2 { color: #2b579a; font-size: 18px; margin-top: 30px; margin-bottom: 15px; }
+          h3 { color: #2b579a; font-size: 16px; margin-top: 25px; margin-bottom: 10px; }
+          table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+          th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+          th { background-color: #f2f2f2; font-weight: bold; }
+          .summary { margin: 20px 0; }
+          .summary p { margin: 8px 0; }
+          .status-active { color: #28a745; font-weight: bold; }
+          .status-maintenance { color: #ffc107; font-weight: bold; }
+          .status-inactive { color: #6c757d; font-weight: bold; }
+          .status-retired { color: #dc3545; font-weight: bold; }
+        </style>
+      </head>
+      <body>
+        <h1>PC Analysis Report - ${period}</h1>
+        
+        <div class="summary">
+          <p><strong>Report Period:</strong> ${period}</p>
+          <p><strong>Generated on:</strong> ${new Date().toLocaleDateString()}</p>
+        </div>
+
+        <h2>Summary Statistics</h2>
+        <div class="summary">
+          <p><strong>Total PCs in Period:</strong> ${totalPCs}</p>
+          <p><strong>Active PCs:</strong> ${activePCs}</p>
+          <p><strong>PCs Under Maintenance:</strong> ${maintenancePCs}</p>
+          <p><strong>Inactive PCs:</strong> ${inactivePCs}</p>
+          <p><strong>Retired PCs:</strong> ${retiredPCs}</p>
+        </div>
+
+        <h2>PC Analysis</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>PC Name</th>
+              <th>Location</th>
+              <th>Status</th>
+              <th>Total Components</th>
+              <th>Working</th>
+              <th>Maintenance</th>
+              <th>Not Working</th>
+              <th>Missing</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${pcTableRows}
+          </tbody>
+        </table>
+
+        ${maintenanceTableRows ? `
+          <h2>Maintenance Components Details</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>PC Name</th>
+                <th>Component</th>
+                <th>Status</th>
+                <th>Remarks</th>
+                <th>Last Updated</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${maintenanceTableRows}
+            </tbody>
+          </table>
+        ` : '<p>No components under maintenance in this period.</p>'}
+
+        <h2>Analysis</h2>
+        <p>This ${period.toLowerCase()} PC analysis report provides a comprehensive overview of computer systems in the inventory. The data shows the distribution of PCs across different locations and their current operational status.</p>
+        <p>Maintenance tracking is crucial for ensuring optimal system performance and identifying components that require attention or replacement.</p>
+      </body>
+      </html>
+    `;
+
+    return htmlContent;
+  }
+
+  private exportToExcel(data: any[], filename: string): void {
+    const ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet(data);
+    const wb: XLSX.WorkBook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Report');
+    
+    // Auto-size columns
+    const colWidths = data[0].map((col: string, index: number) => {
+      const maxLength = Math.max(...data.map(row => String(row[index] || '').length));
+      return { wch: Math.min(Math.max(maxLength + 2, 10), 50) };
+    });
+    ws['!cols'] = colWidths;
+    
+    // Save the file
+    XLSX.writeFile(wb, `${filename}.xlsx`);
+  }
+
+  private exportToWord(data: any[], period: string, filename: string): void {
+    let htmlContent: string;
+    
+    // Check if this is PC analysis data (has pc property) or stock data
+    if (data.length > 0 && data[0].pc) {
+      htmlContent = this.createPCAnalysisWordContent(data, period);
+    } else {
+      htmlContent = this.createWordHTMLContent(data, period);
+    }
+    
+    const blob = new Blob([htmlContent], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${filename}.docx`;
+    link.click();
+    window.URL.revokeObjectURL(url);
   }
 
   private getCurrentDateString(): string {
