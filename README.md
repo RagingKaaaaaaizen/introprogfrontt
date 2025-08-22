@@ -508,35 +508,70 @@ For support and questions:
 
 
 
-Date: August 1, 2025 📌 
-Activity Log: System Development and Documentation Group Members Involved: 
-Villar’s Group: -Front-End Developer -Back-End Developer -Project Manager Support Team: -Researcher -Documentarian Summary of Activities: Today, the group focused on the collaborative development and documentation of the Computer Laboratory Stock Inventory System. System Development Tasks: -Front-End Developer (Villar’s team) worked on enhancing the user interface of the system. This included: -Designing responsive layouts for key modules. -Implementing user-friendly navigation. -Applying consistent color schemes and button functionalities. Back-End Developer (Villar’s team) handled core system logic by: -Developing database connections and queries. -Implementing backend functions for inventory tracking and stock management. -Ensuring system security and data integrity. -Project Manager coordinated tasks, monitored progress, and ensured that deadlines were met and tasks were distributed efficiently. Documentation Tasks: -Researcher and Documentarian collaborated on: -Updating the system documentation with current development progress. -Writing detailed descriptions of each module, including functionality, purpose, and flow. -Organizing technical information gathered from developers and translating them into understandable documentation. Output for the Day: -Partial completion of the front-end interface (homepage, inventory list view). -Back-end functionality for adding, updating, and deleting inventory items was implemented. 
--Updated project documentation covering: -System overview -Module descriptions -User roles and responsibilities -Current progress report 
+Date: August 22, 2025 
+Time: 04:21 P.M📌 
+Activity Log: System Development and Documentation 
 
-📅 Date: August 08, 2025 📌 
+Group Members Involved: 
+Villar’s Group: 
+-Front-End Developer 
+-Back-End Developer 
+-Project Manager 
+Support Team:
+ -Researcher
+-Documentarian 
+
+Summary of Activities: Today, the group focused on the collaborative development and documentation of the Computer Laboratory Stock Inventory System.
+
+ System Development Tasks: -Front-End Developer (Villar’s team) worked on enhancing the user interface of the system. This included: 
+ -Designing responsive layouts for key modules. 
+ -Implementing user-friendly navigation. 
+ -Applying consistent color schemes and button functionalities. 
+ 
+ Back-End Developer (Villar’s team) handled core system logic by: 
+ -Developing database connections and queries. 
+ -Implementing backend functions for inventory tracking and stock management. 
+ -Ensuring system security and data integrity. 
+ -Project Manager coordinated tasks, monitored progress, and ensured that deadlines were met and tasks were distributed efficiently. 
+ 
+ Documentation Tasks: 
+ -Researcher and Documentarian collaborated on: 
+ -Updating the system documentation with current development progress. 
+ -Writing detailed descriptions of each module, including functionality, purpose, and flow. -Organizing technical information gathered from developers and translating them into understandable documentation. 
+ 
+ Output for the Day: 
+ -Partial completion of the front-end interface (homepage, inventory list view). 
+ -Back-end functionality for adding, updating, and deleting inventory items was implemented. 
+-Updated project documentation covering: 
+-System overview -Module descriptions 
+-User roles and responsibilities 
+-Current progress report 
+
+📅 Date: August 22, 2025 📌 
 Activity Log: Documentation 
-Capstone Project [Documentation Progress Updated] Link: ( https://docs.google.com/document/d/1iFHTXtsTzDgkrYyp-Xc61NlsM2nw_eafRBBbOqr-yPo/edit?fbclid=IwY2xjawMCbiZleHRuA2FlbQIxMABicmlkETFrOWZDTG9hR1hxOW00SjdyAR6QeCZ6R7QHAqFQB82EfAZ4XYcuV85cVdT2kwQtNlbLfrvJdGr6D8u6omED3w_aem_ctUpmA8e3lHSnem8ARp23g&tab=t.0 ) 
+Capstone Project [Documentation Progress Updated] Link: https://docs.google.com/document/d/10piRlLlgWrhDyVi3CwN6eP2U58wadZRKclhHLD86Me4/edit?usp=sharing
 Chapter 1 - DONE 
 Chapter 2 - DONE 
 Chapter 3 - DONE 
 Chapter 4 Methodology - DONE 
 Work Breakdown Structure - DONE 
-Existing Cost - DONE 
-Development Cost - DONE 
-Monthly Expenses - DONE 
-Deployment Cost - DONE 
-Moscow - DONE Gantt Chart - DONE 
-Critical Path - NOT YET 
+Existing Cost - IN PROGRESS
+Development Cost - IN PROGRESS 
+Monthly Expenses - IN PROGRESS 
+Deployment Cost - IN PROGRESS 
+Moscow - DONE 
+Gantt Chart - DONE 
+Critical Path - DONE 
 Data and Process Modeling - DONE 
-Existing Flowchart - NOT YET 
-Proposed Flowchart - NOT YET 
-Use Case Diagram - NOT 
+Existing Flowchart - NOT YET (IN PROGRESS)
+Proposed Flowchart - NOT YET  (IN PROGRESS)
+Use Case Diagram - DONE 
 Narrative - DONE 
 Activity Diagram - NOT YET 
 State Chart Diagram - NOT YET 
 Entity Relationship Diagram - NOT YET 
-System Architecture - NOT YET S
-ecurity - DONE 
+System Architecture - NOT YET 
+Security - DONE 
 Authorization - DONE
 Strong Passwords: DONE 
 Update and Maintenance: Done 
