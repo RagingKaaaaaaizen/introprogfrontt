@@ -110,6 +110,7 @@
                     <div class="actions-grid">
                         <a routerLink="/stocks" class="action-item" *ngIf="hasRole([Role.SuperAdmin, Role.Admin, Role.Viewer])">
                             <i class="fas fa-boxes"></i>
+                            
                             <span>View Stocks</span>
                         </a>
                         <a routerLink="/dispose" class="action-item" *ngIf="hasRole([Role.SuperAdmin, Role.Admin, Role.Viewer])">
@@ -123,10 +124,6 @@
                         <a routerLink="/pc" class="action-item" *ngIf="hasRole([Role.SuperAdmin, Role.Admin, Role.Viewer])">
                             <i class="fas fa-desktop"></i>
                             <span>PC Management</span>
-                        </a>
-                        <a routerLink="/admin" class="action-item" *ngIf="hasRole([Role.SuperAdmin])">
-                            <i class="fas fa-cogs"></i>
-                            <span>Admin Panel</span>
                         </a>
                         <a routerLink="/profile" class="action-item">
                             <i class="fas fa-user"></i>

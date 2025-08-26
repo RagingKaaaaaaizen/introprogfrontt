@@ -114,30 +114,6 @@ import { Role } from '@app/_models';
             </a>
           </li>
 
-          <!-- Admin Panel -->
-          <li class="nav-item" *ngIf="hasRole([Role.SuperAdmin])">
-            <a class="nav-link" 
-               routerLink="/admin" 
-               routerLinkActive="active"
-               (click)="closeMobileSidebar()">
-              <i class="fas fa-cogs"></i>
-              <span *ngIf="!isCollapsed || isMobile">Admin Panel</span>
-              <span class="tooltip" *ngIf="isCollapsed && !isMobile">Admin Panel</span>
-            </a>
-          </li>
-
-          <!-- Manage Accounts -->
-          <li class="nav-item" *ngIf="hasRole([Role.SuperAdmin])">
-            <a class="nav-link" 
-               routerLink="/admin/accounts" 
-               routerLinkActive="active"
-               (click)="closeMobileSidebar()">
-              <i class="fas fa-users-cog"></i>
-              <span *ngIf="!isCollapsed || isMobile">Manage Accounts</span>
-              <span class="tooltip" *ngIf="isCollapsed && !isMobile">Manage Accounts</span>
-            </a>
-          </li>
-
           <!-- Profile -->
           <li class="nav-item">
             <a class="nav-link" 
